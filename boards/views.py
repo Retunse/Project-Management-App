@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Board, List
+from .models import Board, List, Task
 from .forms import TaskForm
+from django.views.decorators.http import require_POST
 
 def board_list(request):
     # fetch all boards from the database to display them on the homepage
@@ -32,3 +33,13 @@ def add_task(request, list_id):
 
     # if its a GET request just show the form
     return render(request, 'boards/add_task.html', {'form': form, 'target_list': target_list})
+
+@require_POST
+def delete_task(request, task_id):
+    # find the task or return 404 if it does not exist
+    task = get_object_or_404(Task, id=task_id)
+    board_slug = task.list.board.slug
+    # delete the task from the database
+    task.delete()
+    # go back to the board detail page
+    return redirect('board_detail', slug=board_slug)
