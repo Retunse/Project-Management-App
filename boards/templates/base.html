@@ -11,9 +11,16 @@
     <nav class="bg-blue-600 p-4 shadow-lg">
         <div class="container mx-auto flex justify-between items-center text-white">
             <a href="{% url 'board_list' %}" class="text-2xl font-bold tracking-tight">TrelloClone</a>
-            <div>
-                <span class="mr-4 text-sm opacity-90">Logged in as: <strong>{{ user.username }}</strong></span>
-                <a href="/admin" class="bg-blue-700 hover:bg-blue-800 px-4 py-2 rounded transition">Admin Panel</a>
+            <div class="flex items-center space-x-4">
+                {% if user.is_authenticated %}
+                    <span class="text-sm opacity-90">Hello, <strong>{{ user.username }}</strong></span>
+                    <form method="POST" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="bg-blue-700 hover:bg-blue-800 px-4 py-2 rounded text-sm transition">Logout</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'login' %}" class="bg-blue-700 hover:bg-blue-800 px-4 py-2 rounded text-sm transition">Login</a>
+                {% endif %}
             </div>
         </div>
     </nav>

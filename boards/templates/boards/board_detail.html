@@ -40,9 +40,9 @@
     {% endfor %}
 
     <div class="w-80 flex-shrink-0">
-        <button class="w-full bg-white bg-opacity-50 hover:bg-opacity-100 text-gray-700 font-semibold p-3 rounded-lg border-2 border-dashed border-gray-400 transition">
+        <a href="{% url 'add_list' board.id %}" class="block w-full text-center bg-gray-200 bg-opacity-50 hover:bg-opacity-100 text-gray-700 font-semibold p-3 rounded-lg border-2 border-dashed border-gray-400 transition">
             + Add another list
-        </button>
+        </a>
     </div>
 </div>
 
