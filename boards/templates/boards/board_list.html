@@ -1,17 +1,30 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>My Boards</title>
-</head>
-<body>
-    <h1>My Boards</h1>
-    <ul>
-        {% for board in boards %}
-            <li>{{ board.title }} - created on {{ board.created_at|date:"Y-m-d" }}</li>
-        {% empty %}
-            <li>No boards found. Go to admin panel to add some!</li>
-        {% endfor %}
-    </ul>
-</body>
-</html>
+{% extends 'base.html' %}
+
+{% block title %}My Boards | Trello Clone{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-8">
+    <h1 class="text-3xl font-extrabold text-gray-800">My Boards</h1>
+    <button class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg shadow transition">
+        + Create New Board
+    </button>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for board in boards %}
+    <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 border-t-4 border-blue-500">
+        <div class="p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-2">{{ board.title }}</h2>
+            <p class="text-gray-500 text-sm mb-4">Created on {{ board.created_at|date:"F j, Y" }}</p>
+            <a href="#" class="inline-block text-blue-600 font-semibold hover:text-blue-800 transition">
+                Open Board &rarr;
+            </a>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-span-full bg-white p-10 rounded-xl shadow text-center">
+        <p class="text-gray-600 text-lg">No boards available yet. Create your first one to get started!</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
