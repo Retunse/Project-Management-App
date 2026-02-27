@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Boards</title>
+</head>
+<body>
+    <h1>My Boards</h1>
+    <ul>
+        {% for board in boards %}
+            <li>{{ board.title }} - created on {{ board.created_at|date:"Y-m-d" }}</li>
+        {% empty %}
+            <li>No boards found. Go to admin panel to add some!</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
