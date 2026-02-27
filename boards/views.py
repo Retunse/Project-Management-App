@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Board, List, Task
-from .forms import TaskForm
+from .models import Board, List, Task, User
+from .forms import TaskForm, BoardForm
 from django.views.decorators.http import require_POST
 
 def board_list(request):
@@ -43,3 +43,20 @@ def delete_task(request, task_id):
     task.delete()
     # go back to the board detail page
     return redirect('board_detail', slug=board_slug)
+
+def create_board(request):
+    if request.method == 'POST':
+        form = BoardForm(request.POST)
+        if form.is_valid():
+            # create board instance but don't save yet to assign the owner
+            board = form.save(commit=False)
+            # temporarily assign the first user as owner
+            board.owner = User.objects.first()
+            board.save()
+            # redirect to the newly created board
+            return redirect('board_detail', slug=board.slug)
+    else:
+        # initialize empty board form
+        form = BoardForm()
+
+    return render(request, 'boards/create_board.html', {'form': form})
