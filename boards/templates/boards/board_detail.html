@@ -26,9 +26,9 @@
             {% endfor %}
         </div>
 
-        <button class="mt-4 w-full text-left text-sm text-gray-600 hover:bg-gray-300 p-2 rounded transition">
+        <a href="{% url 'add_task' list.id %}" class="mt-4 block w-full text-center text-sm text-gray-600 hover:bg-gray-300 p-2 rounded transition border border-gray-300 border-dashed">
             + Add a card
-        </button>
+        </a>
     </div>
     {% endfor %}
 
