@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}Add New List | Trello Clone{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-lg mt-10">
+    <h1 class="text-xl font-bold mb-6 text-gray-800">Add new list to: {{ board.title }}</h1>
+
+    <form method="POST">
+        {% csrf_token %}
+        <div class="mb-4">
+            {{ form.title }}
+        </div>
+        <div class="flex justify-between items-center mt-6">
+            <a href="{% url 'board_detail' board.slug %}" class="text-gray-500 hover:text-gray-700 font-medium">Cancel</a>
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition">
+                Add List
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

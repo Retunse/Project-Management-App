@@ -11,7 +11,13 @@
 <div class="flex overflow-x-auto pb-4 items-start space-x-4 custom-scrollbar">
     {% for list in board.lists.all %}
     <div class="bg-gray-200 w-80 flex-shrink-0 rounded-lg shadow-sm p-3">
-        <h3 class="font-bold text-gray-700 mb-3 px-1">{{ list.title }}</h3>
+        <div class="flex justify-between items-center mb-3 px-1">
+            <h3 class="font-bold text-gray-700">{{ list.title }}</h3>
+            <form method="POST" action="{% url 'delete_list' list.id %}" onsubmit="return confirm('Delete this list?');">
+                {% csrf_token %}
+                <button type="submit" class="text-gray-400 hover:text-red-600 text-sm">✕</button>
+            </form>
+        </div>
 
         <div class="space-y-2">
             {% for task in list.tasks.all %}
@@ -40,9 +46,9 @@
     {% endfor %}
 
     <div class="w-80 flex-shrink-0">
-        <button class="w-full bg-white bg-opacity-50 hover:bg-opacity-100 text-gray-700 font-semibold p-3 rounded-lg border-2 border-dashed border-gray-400 transition">
+        <a href="{% url 'add_list' board.id %}" class="block w-full text-center bg-gray-200 bg-opacity-50 hover:bg-opacity-100 text-gray-700 font-semibold p-3 rounded-lg border-2 border-dashed border-gray-400 transition">
             + Add another list
-        </button>
+        </a>
     </div>
 </div>
 

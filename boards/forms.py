@@ -1,5 +1,7 @@
 from django import forms
-from .models import Task, Board
+from .models import Task, Board, List
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
 
 class TaskForm(forms.ModelForm):
     class Meta:
@@ -23,3 +25,29 @@ class BoardForm(forms.ModelForm):
                 'placeholder': 'Enter board title...'
             }),
         }
+
+class ListForm(forms.ModelForm):
+    class Meta:
+        model = List
+        # only the title is needed from the user
+        fields = ['title']
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'class': 'w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none',
+                'placeholder': 'Enter list title...'
+            }),
+        }
+
+class SignUpForm(UserCreationForm):
+    class Meta:
+        model = User
+        fields = ['username', 'email']
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            # define the css classes for all inputs
+            css_classes = 'w-full p-3 border-2 border-gray-200 rounded-lg outline-none focus:border-blue-500 transition'
+            for field_name in self.fields:
+                self.fields[field_name].widget.attrs.update({
+                    'class': css_classes
+                })
