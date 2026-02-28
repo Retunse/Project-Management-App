@@ -4,6 +4,7 @@ from .forms import TaskForm, BoardForm, ListForm, SignUpForm
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login
+from django.http import JsonResponse
 
 def log_activity(user, board, message):
     """ Helper function to record user actions on the board """
@@ -187,3 +188,40 @@ def update_task_labels(request, task_id):
     task.labels.set(label_ids)
     log_activity(request.user, task.list.board, f"updated labels for card '{task.title}'")
     return redirect('task_detail', task_id=task.id)
+
+
+@login_required
+@require_POST
+def update_task_order(request):
+    """
+    Handle drag and drop reordering of tasks.
+    Updates both the list assignment and the vertical position within the list.
+    """
+    new_list_id = request.POST.get('list_id')
+    task_ids_str = request.POST.get('task_ids')
+
+    if task_ids_str and new_list_id:
+        # Convert comma-separated string of IDs from JavaScript to a Python list
+        task_ids = task_ids_str.split(',')
+
+        # Ensure the new list exists and belongs to the current user's board
+        new_list = get_object_or_404(List, id=new_list_id, board__owner=request.user)
+
+        # use a transaction-like approach by updating each tasks position based on its index in the received array
+        for index, t_id in enumerate(task_ids):
+            # filter by ID and board owner for extra security
+            task_query = Task.objects.filter(id=t_id, list__board__owner=request.user)
+
+            if task_query.exists():
+                task = task_query.first()
+                old_list = task.list
+
+                # Update task's list and its new position index
+                task_query.update(list=new_list, position=index)
+
+        # Final log for the movement action
+        log_activity(request.user, new_list.board, f"reordered tasks in {new_list.title}")
+
+        return JsonResponse({'status': 'success'})
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid data'}, status=400)

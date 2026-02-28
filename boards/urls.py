@@ -19,4 +19,5 @@ urlpatterns = [
     path('task/<int:task_id>/', views.task_detail, name='task_detail'),
     path('board/<slug:slug>/labels/', views.manage_labels, name='manage_labels'),
     path('task/<int:task_id>/update-labels/', views.update_task_labels, name='update_task_labels'),
+    path('tasks/update-order/', views.update_task_order, name='update_task_order'),
 ]

@@ -61,10 +61,11 @@ class Task(models.Model):
     due_date = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     labels = models.ManyToManyField(Label, blank=True, related_name='tasks')
+    position = models.PositiveIntegerField(default=0)
 
     class Meta:
         # newest tasks appear first
-        ordering = ['-created_at']
+        ordering = ['position']
 
     def __str__(self):
         return self.title
