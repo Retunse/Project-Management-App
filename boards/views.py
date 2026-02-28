@@ -1,9 +1,13 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Board, List, Task, User, Label
+from .models import Board, List, Task, User, Label, ActivityLog
 from .forms import TaskForm, BoardForm, ListForm, SignUpForm
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login
+
+def log_activity(user, board, message):
+    """ Helper function to record user actions on the board """
+    ActivityLog.objects.create(user=user, board=board, message=message)
 
 @login_required
 def board_list(request):
@@ -13,6 +17,7 @@ def board_list(request):
 
 @login_required
 def board_detail(request, slug):
+    # display board details and associated lists/tasks
     board = get_object_or_404(Board, slug=slug, owner=request.user)
     return render(request, 'boards/board_detail.html', {'board': board})
 
@@ -23,78 +28,73 @@ def add_task(request, list_id):
 
     if request.method == 'POST':
         title = request.POST.get('title')
+        # quick add logic (only title from inline form)
         if title:
-            Task.objects.create(title=title, list=target_list)
+            task = Task.objects.create(title=title, list=target_list)
+            log_activity(request.user, target_list.board, f"added card '{task.title}' to {target_list.title}")
             return redirect('board_detail', slug=target_list.board.slug)
 
+        # full form logic (with description and priority)
         form = TaskForm(request.POST)
         if form.is_valid():
-            # create task object but dont save to db yet
             task = form.save(commit=False)
             task.list = target_list
             task.save()
-            # redirect back to the board detail page using board slug
+            log_activity(request.user, target_list.board, f"added card '{task.title}' to {target_list.title}")
             return redirect('board_detail', slug=target_list.board.slug)
     else:
-        # initialize an empty form for GET requests to avoid UnboundLocalError
         form = TaskForm()
 
-    # if its a GET request just show the form
     return render(request, 'boards/add_task.html', {'form': form, 'target_list': target_list})
 
+@login_required
 @require_POST
 def delete_task(request, task_id):
-    # find the task or return 404 if it does not exist
-    task = get_object_or_404(Task, id=task_id)
-    board_slug = task.list.board.slug
-    # delete the task from the database
+    # find task and ensure owner has permission through list/board
+    task = get_object_or_404(Task, id=task_id, list__board__owner=request.user)
+    board = task.list.board
+    task_title = task.title
     task.delete()
-    # go back to the board detail page
-    return redirect('board_detail', slug=board_slug)
+    log_activity(request.user, board, f"deleted card '{task_title}'")
+    return redirect('board_detail', slug=board.slug)
 
 @login_required
 def create_board(request):
     if request.method == 'POST':
         form = BoardForm(request.POST)
         if form.is_valid():
-            # create board instance but don't save yet to assign the owner
             board = form.save(commit=False)
-            # temporarily assign the first user as owner
             board.owner = request.user
             board.save()
-            # redirect to the newly created board
+            log_activity(request.user, board, f"created the board '{board.title}'")
             return redirect('board_detail', slug=board.slug)
     else:
-        # initialize empty board form
         form = BoardForm()
-
     return render(request, 'boards/create_board.html', {'form': form})
 
 @login_required
 def add_list(request, board_id):
-    # fetch the board where the new list will be created
-    board = get_object_or_404(Board, id=board_id)
+    board = get_object_or_404(Board, id=board_id, owner=request.user)
 
     if request.method == 'POST':
         form = ListForm(request.POST)
         if form.is_valid():
             new_list = form.save(commit=False)
             new_list.board = board
-            # set the position to be the last one in the board
+            # auto-positioning logic
             current_lists_count = board.lists.count()
             new_list.position = current_lists_count + 1
             new_list.save()
+            log_activity(request.user, board, f"added list '{new_list.title}'")
             return redirect('board_detail', slug=board.slug)
     else:
         form = ListForm()
-
     return render(request, 'boards/add_list.html', {'form': form, 'board': board})
 
 def signup(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
         if form.is_valid():
-            # save the user and log them in automatically
             user = form.save()
             login(request, user)
             return redirect('board_list')
@@ -102,23 +102,23 @@ def signup(request):
         form = SignUpForm()
     return render(request, 'registration/signup.html', {'form': form})
 
-
 @login_required
 @require_POST
 def delete_board(request, slug):
-    # find the board and ensure the logged-in user is the owner
     board = get_object_or_404(Board, slug=slug, owner=request.user)
     board.delete()
+    # no log after deletion because the board no longer exists
     return redirect('board_list')
 
 @login_required
 @require_POST
 def delete_list(request, list_id):
-    # find the list through the board owner for security
     list_obj = get_object_or_404(List, id=list_id, board__owner=request.user)
-    board_slug = list_obj.board.slug
+    board = list_obj.board
+    list_title = list_obj.title
     list_obj.delete()
-    return redirect('board_detail', slug=board_slug)
+    log_activity(request.user, board, f"deleted list '{list_title}'")
+    return redirect('board_detail', slug=board.slug)
 
 @login_required
 def edit_board(request, slug):
@@ -127,6 +127,7 @@ def edit_board(request, slug):
         form = BoardForm(request.POST, instance=board)
         if form.is_valid():
             form.save()
+            log_activity(request.user, board, f"renamed board to '{board.title}'")
             return redirect('board_list')
     else:
         form = BoardForm(instance=board)
@@ -139,6 +140,7 @@ def edit_list(request, list_id):
         form = ListForm(request.POST, instance=list_obj)
         if form.is_valid():
             form.save()
+            log_activity(request.user, list_obj.board, f"renamed list to '{list_obj.title}'")
             return redirect('board_detail', slug=list_obj.board.slug)
     else:
         form = ListForm(instance=list_obj)
@@ -151,6 +153,7 @@ def edit_task(request, task_id):
         form = TaskForm(request.POST, instance=task)
         if form.is_valid():
             form.save()
+            log_activity(request.user, task.list.board, f"edited card '{task.title}'")
             return redirect('board_detail', slug=task.list.board.slug)
     else:
         form = TaskForm(instance=task)
@@ -158,10 +161,8 @@ def edit_task(request, task_id):
 
 @login_required
 def task_detail(request, task_id):
-    # Fetch task and ensure it belongs to the board owner
     task = get_object_or_404(Task, id=task_id, list__board__owner=request.user)
     return render(request, 'boards/task_detail.html', {'task': task})
-
 
 @login_required
 def manage_labels(request, slug):
@@ -172,7 +173,8 @@ def manage_labels(request, slug):
         title = request.POST.get('title')
         color = request.POST.get('color')
         if title and color:
-            Label.objects.create(title=title, color=color, board=board)
+            label = Label.objects.create(title=title, color=color, board=board)
+            log_activity(request.user, board, f"created new label '{label.title}'")
             return redirect('manage_labels', slug=slug)
 
     return render(request, 'boards/manage_labels.html', {'board': board, 'labels': labels})
@@ -183,4 +185,5 @@ def update_task_labels(request, task_id):
     task = get_object_or_404(Task, id=task_id, list__board__owner=request.user)
     label_ids = request.POST.getlist('labels')
     task.labels.set(label_ids)
+    log_activity(request.user, task.list.board, f"updated labels for card '{task.title}'")
     return redirect('task_detail', task_id=task.id)

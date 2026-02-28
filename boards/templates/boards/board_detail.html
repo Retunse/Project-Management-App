@@ -112,6 +112,39 @@
     </div>
 </div>
 
+<div x-data="{ sideOpen: false }">
+    <button @click="sideOpen = true" class="fixed bottom-6 right-6 bg-gray-800 text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-transform z-40">
+        🔔 History
+    </button>
+
+    <div x-show="sideOpen" x-cloak class="fixed inset-0 bg-black bg-opacity-30 z-50">
+        <div @click.away="sideOpen = false" class="absolute right-0 top-0 h-full w-80 bg-white shadow-2xl p-6 transition-transform">
+            <div class="flex justify-between items-center mb-6 border-b pb-4">
+                <h2 class="text-xl font-bold text-gray-800">Activity Feed</h2>
+                <button @click="sideOpen = false" class="text-gray-400 hover:text-gray-600">✕</button>
+            </div>
+
+            <div class="space-y-6 overflow-y-auto h-[calc(100%-100px)] pr-2 custom-scrollbar">
+                {% for activity in board.activities.all %}
+                <div class="flex items-start space-x-3">
+                    <div class="bg-blue-100 text-blue-600 rounded-full h-8 w-8 flex items-center justify-center font-bold text-xs flex-shrink-0">
+                        {{ activity.user.username|slice:":2"|upper }}
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-800">
+                            <span class="font-bold">{{ activity.user.username }}</span> {{ activity.message }}
+                        </p>
+                        <p class="text-[10px] text-gray-400 mt-1 uppercase">{{ activity.created_at|timesince }} ago</p>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-gray-400 italic text-center py-10 text-sm">No activity recorded yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
     /* basic styling for a cleaner horizontal scrollbar */
     .custom-scrollbar::-webkit-scrollbar { height: 8px; }

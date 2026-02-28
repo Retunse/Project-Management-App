@@ -68,3 +68,17 @@ class Task(models.Model):
 
     def __str__(self):
         return self.title
+
+class ActivityLog(models.Model):
+    board = models.ForeignKey(Board, on_delete=models.CASCADE, related_name='activities')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    # the text describing what happened
+    message = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        # newest activities first
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username}: {self.message}"
