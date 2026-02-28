@@ -176,3 +176,11 @@ def manage_labels(request, slug):
             return redirect('manage_labels', slug=slug)
 
     return render(request, 'boards/manage_labels.html', {'board': board, 'labels': labels})
+
+@login_required
+@require_POST
+def update_task_labels(request, task_id):
+    task = get_object_or_404(Task, id=task_id, list__board__owner=request.user)
+    label_ids = request.POST.getlist('labels')
+    task.labels.set(label_ids)
+    return redirect('task_detail', task_id=task.id)
