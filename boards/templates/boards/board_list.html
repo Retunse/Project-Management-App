@@ -10,9 +10,9 @@
     </a>
 </div>
 
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<div id="boards-container" class="grid grid-cols-1 md:grid-cols-3 gap-6">
     {% for board in boards %}
-    <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 border-t-4 border-blue-500">
+    <div class="board-item cursor-grab bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 border-t-4 border-blue-500" data-board-id="{{ board.id }}">
         <div class="p-6">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-bold text-gray-900 truncate pr-4">
@@ -43,4 +43,25 @@
     </div>
     {% endfor %}
 </div>
+
+<script>
+    new Sortable(document.getElementById('boards-container'), {
+        animation: 150,
+        draggable: '.board-item',
+        onEnd: function () {
+            const boardIds = Array.from(document.querySelectorAll('.board-item'))
+                                  .map(el => el.getAttribute('data-board-id'));
+
+            const formData = new FormData();
+            formData.append('board_ids', boardIds.join(','));
+
+            fetch("{% url 'update_board_order' %}", {
+                method: "POST",
+                headers: { "X-CSRFToken": "{{ csrf_token }}" },
+                body: formData
+            });
+        }
+    });
+</script>
+
 {% endblock %}

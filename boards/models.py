@@ -8,6 +8,10 @@ class Board(models.Model):
     slug = models.SlugField(unique=True, blank=True)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='boards')
     created_at = models.DateTimeField(auto_now_add=True)
+    position = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['position']
 
     def save(self, *args, **kwargs):
         # generate a unique slug based on the title before saving

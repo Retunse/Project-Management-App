@@ -225,3 +225,28 @@ def update_task_order(request):
         return JsonResponse({'status': 'success'})
 
     return JsonResponse({'status': 'error', 'message': 'Invalid data'}, status=400)
+
+
+@login_required
+@require_POST
+def update_list_order(request):
+    """ Handle drag and drop reordering for lists within a board """
+    list_ids_str = request.POST.get('list_ids')
+    if list_ids_str:
+        list_ids = list_ids_str.split(',')
+        for index, l_id in enumerate(list_ids):
+            List.objects.filter(id=l_id, board__owner=request.user).update(position=index)
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'error'}, status=400)
+
+@login_required
+@require_POST
+def update_board_order(request):
+    """ Handle drag and drop reordering for boards on the dashboard """
+    board_ids_str = request.POST.get('board_ids')
+    if board_ids_str:
+        board_ids = board_ids_str.split(',')
+        for index, b_id in enumerate(board_ids):
+            Board.objects.filter(id=b_id, owner=request.user).update(position=index)
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'error'}, status=400)

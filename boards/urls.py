@@ -20,4 +20,6 @@ urlpatterns = [
     path('board/<slug:slug>/labels/', views.manage_labels, name='manage_labels'),
     path('task/<int:task_id>/update-labels/', views.update_task_labels, name='update_task_labels'),
     path('tasks/update-order/', views.update_task_order, name='update_task_order'),
+    path('lists/update-order/', views.update_list_order, name='update_list_order'),
+    path('boards/update-order/', views.update_board_order, name='update_board_order'),
 ]

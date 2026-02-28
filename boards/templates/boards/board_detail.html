@@ -13,9 +13,9 @@
     </a>
 </div>
 
-<div class="flex overflow-x-auto pb-4 items-start space-x-4 custom-scrollbar">
+<div id="lists-container" class="flex overflow-x-auto pb-4 items-start space-x-4 custom-scrollbar">
     {% for list in board.lists.all %}
-    <div class="bg-gray-200 w-80 flex-shrink-0 rounded-lg shadow-sm p-3">
+    <div class="list-item bg-gray-200 w-80 flex-shrink-0 rounded-lg shadow-sm p-3 cursor-grab" data-list-id="{{ list.id }}">
         <div class="flex justify-between items-center mb-3 px-1">
             <h3 class="font-bold text-gray-700">{{ list.title }}</h3>
             <div class="flex space-x-2">
@@ -154,33 +154,51 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-    const containers = document.querySelectorAll('.task-sortable');
+        const containers = document.querySelectorAll('.task-sortable');
 
-    containers.forEach(container => {
-        new Sortable(container, {
-            group: 'tasks',
-            animation: 150,
-            ghostClass: 'bg-blue-100',
-            onEnd: function (evt) {
-                // get the list of task IDs in the new order from the destination list
-                const taskIds = Array.from(evt.to.querySelectorAll('[data-task-id]'))
-                                    .map(el => el.getAttribute('data-task-id'));
-                const newListId = evt.to.getAttribute('data-list-id');
+        containers.forEach(container => {
+            new Sortable(container, {
+                group: 'tasks',
+                animation: 150,
+                ghostClass: 'bg-blue-100',
+                onEnd: function (evt) {
+                    // get the list of task IDs in the new order from the destination list
+                    const taskIds = Array.from(evt.to.querySelectorAll('[data-task-id]'))
+                                        .map(el => el.getAttribute('data-task-id'));
+                    const newListId = evt.to.getAttribute('data-list-id');
 
-                const formData = new FormData();
-                formData.append('list_id', newListId);
-                formData.append('task_ids', taskIds.join(',')); // send IDs as comma-separated string
+                    const formData = new FormData();
+                    formData.append('list_id', newListId);
+                    formData.append('task_ids', taskIds.join(',')); // send IDs as comma-separated string
 
-                fetch("{% url 'update_task_order' %}", {
-                    method: "POST",
-                    headers: {
-                        "X-CSRFToken": "{{ csrf_token }}",
-                    },
-                    body: formData
-                });
-            },
+                    fetch("{% url 'update_task_order' %}", {
+                        method: "POST",
+                        headers: {
+                            "X-CSRFToken": "{{ csrf_token }}",
+                        },
+                        body: formData
+                    });
+                },
+            });
         });
     });
-});
+
+new Sortable(document.getElementById('lists-container'), {
+        animation: 150,
+        draggable: '.list-item',
+        onEnd: function () {
+            const listIds = Array.from(document.querySelectorAll('.list-item'))
+                                 .map(el => el.getAttribute('data-list-id'));
+
+            const formData = new FormData();
+            formData.append('list_ids', listIds.join(','));
+
+            fetch("{% url 'update_list_order' %}", {
+                method: "POST",
+                headers: { "X-CSRFToken": "{{ csrf_token }}" },
+                body: formData
+            });
+        }
+    });
 </script>
 {% endblock %}
