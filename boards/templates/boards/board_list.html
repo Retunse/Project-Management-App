@@ -14,12 +14,24 @@
     {% for board in boards %}
     <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 border-t-4 border-blue-500">
         <div class="p-6">
-            <h2 class="text-xl font-bold text-gray-900 mb-2">{{ board.title }}</h2>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-900 truncate pr-4">
+                    {{ board.title }}
+                </h2>
+                <div class="flex space-x-3 items-center flex-shrink-0">
+                    <a href="{% url 'edit_board' board.slug %}" class="text-blue-500 hover:text-blue-700 text-xs font-semibold">
+                        Edit
+                    </a>
+                    <form method="POST" action="{% url 'delete_board' board.slug %}" onsubmit="return confirm('Are you sure?');">
+                        {% csrf_token %}
+                        <button type="submit" class="text-red-400 hover:text-red-600 text-xs font-semibold">
+                            Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+
             <p class="text-gray-500 text-sm mb-4">Created on {{ board.created_at|date:"F j, Y" }}</p>
-            <form method="POST" action="{% url 'delete_board' board.slug %}" onsubmit="return confirm('Delete this board?');">
-                {% csrf_token %}
-                <button type="submit" class="text-red-400 hover:text-red-600 text-xs mt-2">Delete Board</button>
-            </form>
             <a href="{% url 'board_detail' board.slug %}" class="inline-block text-blue-600 font-semibold hover:text-blue-800 transition">
                 Open Board &rarr;
             </a>

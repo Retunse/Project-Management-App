@@ -13,4 +13,7 @@ urlpatterns = [
     path('signup/', views.signup, name='signup'),
     path('board/<slug:slug>/delete/', views.delete_board, name='delete_board'),
     path('list/<int:list_id>/delete/', views.delete_list, name='delete_list'),
+    path('board/<slug:slug>/edit/', views.edit_board, name='edit_board'),
+    path('list/<int:list_id>/edit/', views.edit_list, name='edit_list'),
+    path('task/<int:task_id>/edit/', views.edit_task, name='edit_task'),
 ]

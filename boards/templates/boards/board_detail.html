@@ -13,27 +13,24 @@
     <div class="bg-gray-200 w-80 flex-shrink-0 rounded-lg shadow-sm p-3">
         <div class="flex justify-between items-center mb-3 px-1">
             <h3 class="font-bold text-gray-700">{{ list.title }}</h3>
-            <form method="POST" action="{% url 'delete_list' list.id %}" onsubmit="return confirm('Delete this list?');">
-                {% csrf_token %}
-                <button type="submit" class="text-gray-400 hover:text-red-600 text-sm">✕</button>
-            </form>
+            <div class="flex space-x-2">
+                <a href="{% url 'edit_list' list.id %}" class="text-gray-400 hover:text-blue-600 text-sm">✎</a>
+                <form method="POST" action="{% url 'delete_list' list.id %}" onsubmit="return confirm('Delete?');">
+                    {% csrf_token %}
+                    <button type="submit" class="text-gray-400 hover:text-red-600 text-sm">✕</button>
+                </form>
+            </div>
         </div>
 
         <div class="space-y-2">
             {% for task in list.tasks.all %}
             <div class="bg-white p-3 rounded shadow-sm border-b border-gray-300 hover:bg-gray-50 group transition flex justify-between items-start">
-                <div>
+                <a href="{% url 'edit_task' task.id %}" class="flex-grow">
                     <p class="text-sm text-gray-800 font-medium">{{ task.title }}</p>
-                    {% if task.priority == 'HIGH' %}
-                        <span class="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-bold uppercase">High</span>
-                    {% endif %}
-                </div>
-
-                <form method="POST" action="{% url 'delete_task' task.id %}" class="opacity-0 group-hover:opacity-100 transition">
+                </a>
+                <form method="POST" action="{% url 'delete_task' task.id %}">
                     {% csrf_token %}
-                    <button type="submit" class="text-gray-400 hover:text-red-600 font-bold text-xs p-1">
-                        ✕
-                    </button>
+                    <button type="submit" class="text-gray-300 hover:text-red-600 text-xs ml-2">✕</button>
                 </form>
             </div>
             {% endfor %}

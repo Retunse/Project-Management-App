@@ -7,14 +7,13 @@ from django.contrib.auth import login
 
 @login_required
 def board_list(request):
-    # fetch all boards from the database to display them on the homepage
-    boards = Board.objects.all()
+    # filter boards to show only those belonging to the current user
+    boards = Board.objects.filter(owner=request.user)
     return render(request, 'boards/board_list.html', {'boards': boards})
 
 @login_required
 def board_detail(request, slug):
-    # fetch the board by slug and pre-load lists and their tasks in one go
-    board = get_object_or_404(Board.objects.prefetch_related('lists__tasks'), slug=slug)
+    board = get_object_or_404(Board, slug=slug, owner=request.user)
     return render(request, 'boards/board_detail.html', {'board': board})
 
 @login_required
@@ -56,7 +55,7 @@ def create_board(request):
             # create board instance but don't save yet to assign the owner
             board = form.save(commit=False)
             # temporarily assign the first user as owner
-            board.owner = User.objects.first()
+            board.owner = request.user
             board.save()
             # redirect to the newly created board
             return redirect('board_detail', slug=board.slug)
@@ -115,3 +114,39 @@ def delete_list(request, list_id):
     board_slug = list_obj.board.slug
     list_obj.delete()
     return redirect('board_detail', slug=board_slug)
+
+@login_required
+def edit_board(request, slug):
+    board = get_object_or_404(Board, slug=slug, owner=request.user)
+    if request.method == 'POST':
+        form = BoardForm(request.POST, instance=board)
+        if form.is_valid():
+            form.save()
+            return redirect('board_list')
+    else:
+        form = BoardForm(instance=board)
+    return render(request, 'boards/edit_board.html', {'form': form, 'board': board})
+
+@login_required
+def edit_list(request, list_id):
+    list_obj = get_object_or_404(List, id=list_id, board__owner=request.user)
+    if request.method == 'POST':
+        form = ListForm(request.POST, instance=list_obj)
+        if form.is_valid():
+            form.save()
+            return redirect('board_detail', slug=list_obj.board.slug)
+    else:
+        form = ListForm(instance=list_obj)
+    return render(request, 'boards/edit_list.html', {'form': form, 'list': list_obj})
+
+@login_required
+def edit_task(request, task_id):
+    task = get_object_or_404(Task, id=task_id, list__board__owner=request.user)
+    if request.method == 'POST':
+        form = TaskForm(request.POST, instance=task)
+        if form.is_valid():
+            form.save()
+            return redirect('board_detail', slug=task.list.board.slug)
+    else:
+        form = TaskForm(instance=task)
+    return render(request, 'boards/edit_task.html', {'form': form, 'task': task})
