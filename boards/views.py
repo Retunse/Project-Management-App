@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Board, List, Task, User
+from .models import Board, List, Task, User, Label
 from .forms import TaskForm, BoardForm, ListForm, SignUpForm
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
@@ -19,9 +19,14 @@ def board_detail(request, slug):
 @login_required
 def add_task(request, list_id):
     # get the specific list where the task will be added
-    target_list = get_object_or_404(List, id=list_id)
+    target_list = get_object_or_404(List, id=list_id, board__owner=request.user)
 
     if request.method == 'POST':
+        title = request.POST.get('title')
+        if title:
+            Task.objects.create(title=title, list=target_list)
+            return redirect('board_detail', slug=target_list.board.slug)
+
         form = TaskForm(request.POST)
         if form.is_valid():
             # create task object but dont save to db yet
@@ -150,3 +155,24 @@ def edit_task(request, task_id):
     else:
         form = TaskForm(instance=task)
     return render(request, 'boards/edit_task.html', {'form': form, 'task': task})
+
+@login_required
+def task_detail(request, task_id):
+    # Fetch task and ensure it belongs to the board owner
+    task = get_object_or_404(Task, id=task_id, list__board__owner=request.user)
+    return render(request, 'boards/task_detail.html', {'task': task})
+
+
+@login_required
+def manage_labels(request, slug):
+    board = get_object_or_404(Board, slug=slug, owner=request.user)
+    labels = board.labels.all()
+
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        color = request.POST.get('color')
+        if title and color:
+            Label.objects.create(title=title, color=color, board=board)
+            return redirect('manage_labels', slug=slug)
+
+    return render(request, 'boards/manage_labels.html', {'board': board, 'labels': labels})

@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils.text import slugify
 
+
 class Board(models.Model):
     title = models.CharField(max_length=100)
     slug = models.SlugField(unique=True, blank=True)
@@ -13,6 +14,22 @@ class Board(models.Model):
         if not self.slug:
             self.slug = slugify(self.title)
         super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.title
+
+class Label(models.Model):
+    COLOR_CHOICES = [
+        ('bg-green-500', 'Green'),
+        ('bg-yellow-500', 'Yellow'),
+        ('bg-orange-500', 'Orange'),
+        ('bg-red-500', 'Red'),
+        ('bg-purple-500', 'Purple'),
+        ('bg-blue-500', 'Blue'),
+    ]
+    title = models.CharField(max_length=50)
+    color = models.CharField(max_length=20, choices=COLOR_CHOICES, default='bg-green-500')
+    board = models.ForeignKey(Board, on_delete=models.CASCADE, related_name='labels')
 
     def __str__(self):
         return self.title
@@ -43,6 +60,7 @@ class Task(models.Model):
     assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     due_date = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    labels = models.ManyToManyField(Label, blank=True, related_name='tasks')
 
     class Meta:
         # newest tasks appear first

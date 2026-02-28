@@ -16,4 +16,6 @@ urlpatterns = [
     path('board/<slug:slug>/edit/', views.edit_board, name='edit_board'),
     path('list/<int:list_id>/edit/', views.edit_list, name='edit_list'),
     path('task/<int:task_id>/edit/', views.edit_task, name='edit_task'),
+    path('task/<int:task_id>/', views.task_detail, name='task_detail'),
+    path('board/<slug:slug>/labels/', views.manage_labels, name='manage_labels'),
 ]

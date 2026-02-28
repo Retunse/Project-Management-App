@@ -13,18 +13,33 @@
             <div class="mb-4">
                 <label class="block text-sm font-bold text-gray-700 mb-1">{{ field.label }}</label>
 
-                {{ field }}
+                {# Dodajemy ID do diva, żeby łatwiej było stylować inputy wewnątrz przez CSS jeśli trzeba #}
+                <div class="registration-input-container">
+                    {{ field }}
+                </div>
 
                 {% if field.errors %}
                     {% for error in field.errors %}
-                        <p class="text-red-500 text-xs mt-1 font-semibold">{{ error }}</p>
+                        <p class="text-red-500 text-[11px] mt-1 font-semibold italic">{{ error }}</p>
                     {% endfor %}
                 {% endif %}
-
-                {% if field.help_text and not field.errors %}
-                    <p class="text-gray-400 text-[10px] mt-1 leading-tight">{{ field.help_text }}</p>
-                {% endif %}
             </div>
+
+        <style>
+            .registration-input-container input {
+                width: 100% !important;
+                padding: 0.75rem !important;
+                border: 2px solid #d1d5db !important;
+                border-radius: 0.5rem !important;
+                background-color: white !important;
+                outline: none !important;
+                appearance: none !important;
+            }
+            .registration-input-container input:focus {
+                border-color: #2563eb !important;
+                box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2) !important;
+            }
+        </style>
         {% endfor %}
 
         <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow-lg transition mt-4 transform hover:-translate-y-1">

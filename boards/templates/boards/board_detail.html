@@ -3,9 +3,14 @@
 {% block title %}{{ board.title }} | Trello Clone{% endblock %}
 
 {% block content %}
-<div class="mb-6">
-    <h1 class="text-2xl font-bold text-gray-800">{{ board.title }}</h1>
-    <p class="text-sm text-gray-500">Manage your lists and tasks below.</p>
+<div class="mb-6 flex justify-between items-end">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-800">{{ board.title }}</h1>
+        <p class="text-sm text-gray-500">Manage your lists and tasks below.</p>
+    </div>
+    <a href="{% url 'manage_labels' board.slug %}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-bold flex items-center transition">
+        <span class="mr-2">🏷️</span> Labels
+    </a>
 </div>
 
 <div class="flex overflow-x-auto pb-4 items-start space-x-4 custom-scrollbar">
@@ -24,21 +29,79 @@
 
         <div class="space-y-2">
             {% for task in list.tasks.all %}
-            <div class="bg-white p-3 rounded shadow-sm border-b border-gray-300 hover:bg-gray-50 group transition flex justify-between items-start">
-                <a href="{% url 'edit_task' task.id %}" class="flex-grow">
-                    <p class="text-sm text-gray-800 font-medium">{{ task.title }}</p>
-                </a>
-                <form method="POST" action="{% url 'delete_task' task.id %}">
-                    {% csrf_token %}
-                    <button type="submit" class="text-gray-300 hover:text-red-600 text-xs ml-2">✕</button>
-                </form>
+            <div class="bg-white p-3 rounded shadow-sm border-b border-gray-300 hover:bg-gray-50 group transition">
+                <div class="flex justify-between items-start">
+                    <a href="{% url 'task_detail' task.id %}" class="flex-grow">
+                        <div class="flex flex-wrap gap-1 mb-1">
+                            {% for label in task.labels.all %}
+                                <div class="{{ label.color }} h-2 w-10 rounded-full" title="{{ label.title }}"></div>
+                            {% endfor %}
+                        </div>
+                        <p class="text-sm text-gray-800 font-medium leading-snug">{{ task.title }}</p>
+                        {% if task.priority == 'HIGH' %}
+                            <span class="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-bold uppercase mt-1 inline-block">High</span>
+                        {% endif %}
+                    </a>
+
+                    <div class="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition ml-2">
+                        <a href="{% url 'edit_task' task.id %}" class="text-gray-400 hover:text-blue-600 p-1" title="Edit task">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                        </a>
+                        <form method="POST" action="{% url 'delete_task' task.id %}" onsubmit="return confirm('Delete task?');">
+                            {% csrf_token %}
+                            <button type="submit" class="text-gray-400 hover:text-red-600 p-1" title="Delete task">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
             {% endfor %}
         </div>
 
-        <a href="{% url 'add_task' list.id %}" class="mt-4 block w-full text-center text-sm text-gray-600 hover:bg-gray-300 p-2 rounded transition border border-gray-300 border-dashed">
-            + Add a card
-        </a>
+        <div x-data="{ open: false }" class="mt-3 px-2">
+            <button @click="open = true; $nextTick(() => $refs.taskTitle.focus())"
+                    x-show="!open"
+                    class="flex items-center w-full text-left text-sm text-gray-600 hover:bg-gray-300 p-2 rounded transition">
+                <span class="mr-1 text-lg">+</span> Add a card
+            </button>
+
+            <div x-show="open" @click.away="open = false" x-cloak class="bg-gray-100 p-2 rounded shadow-md border border-gray-300">
+                <form method="POST" action="{% url 'add_task' list.id %}">
+                    {% csrf_token %}
+                    <textarea
+                        x-ref="taskTitle"
+                        name="title"
+                        rows="1"
+                        @keydown.enter.prevent="if (!$event.shiftKey) $el.form.submit()"
+                        class="w-full p-2 text-sm border-2 border-gray-300 rounded-md focus:border-blue-500 focus:ring-0 resize-none shadow-sm"
+                        placeholder="Enter a title..."
+                        required
+                    ></textarea>
+
+                    <div class="flex items-center justify-between mt-2">
+                        <div class="flex items-center space-x-2">
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-1.5 px-4 rounded shadow">
+                                Add card
+                            </button>
+                            <button @click="open = false" type="button" class="text-gray-500 hover:text-gray-800 p-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <a href="{% url 'add_task' list.id %}" class="text-xs text-gray-500 hover:text-blue-600 font-medium italic">
+                            Full options...
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
     {% endfor %}
 

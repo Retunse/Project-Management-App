@@ -46,7 +46,7 @@ class SignUpForm(UserCreationForm):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
             # define the css classes for all inputs
-            css_classes = 'w-full p-3 border-2 border-gray-200 rounded-lg outline-none focus:border-blue-500 transition'
+            css_classes = 'w-full p-3 bg-white border-2 border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all text-gray-800'
             for field_name in self.fields:
                 self.fields[field_name].widget.attrs.update({
                     'class': css_classes

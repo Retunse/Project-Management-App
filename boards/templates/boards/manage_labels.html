@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Labels | {{ board.title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto mt-10">
+    <div class="flex items-center justify-between mb-8">
+        <h1 class="text-2xl font-bold text-gray-800">Labels for {{ board.title }}</h1>
+        <a href="{% url 'board_detail' board.slug %}" class="text-blue-600 hover:underline text-sm font-medium">&larr; Back to Board</a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+            <h2 class="text-lg font-semibold mb-4 text-gray-700">Create New Label</h2>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label class="block text-sm font-bold text-gray-600 mb-2">Label Title</label>
+                    <input type="text" name="title" required placeholder="e.g. Urgent, Design..."
+                           class="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 outline-none transition">
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-gray-600 mb-3">Select Color</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        {% for color_val, color_name in board.labels.model.COLOR_CHOICES %}
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="color" value="{{ color_val }}" class="peer sr-only" required {% if forloop.first %}checked{% endif %}>
+                            <div class="h-10 w-full rounded-lg {{ color_val }} border-4 border-transparent peer-checked:border-white peer-checked:ring-2 peer-checked:ring-gray-400 transition-all"></div>
+                            <span class="sr-only">{{ color_name }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg transition transform hover:-translate-y-0.5">
+                    Add Label
+                </button>
+            </form>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+            <h2 class="text-lg font-semibold mb-4 text-gray-700">Existing Labels</h2>
+            <div class="space-y-3">
+                {% for label in labels %}
+                    <div class="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition">
+                        <div class="flex items-center space-x-3">
+                            <div class="h-4 w-12 rounded-full {{ label.color }}"></div>
+                            <span class="font-medium text-gray-700">{{ label.title }}</span>
+                        </div>
+                        </div>
+                {% empty %}
+                    <p class="text-gray-400 italic text-center py-8">No labels created yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
