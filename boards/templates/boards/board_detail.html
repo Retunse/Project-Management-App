@@ -53,6 +53,7 @@
     <div class="list-item bg-gray-200 w-80 flex-shrink-0 rounded-lg shadow-sm p-3 cursor-grab" data-list-id="{{ list.id }}">
         <div class="flex justify-between items-center mb-3 px-1">
             <h3 class="font-bold text-gray-700">{{ list.title }}</h3>
+            {% if board.owner == request.user %}
             <div class="flex space-x-2">
                 <a href="{% url 'edit_list' list.id %}" class="text-gray-400 hover:text-blue-600 text-sm">✎</a>
                 <form method="POST" action="{% url 'delete_list' list.id %}" onsubmit="return confirm('Delete?');">
@@ -60,6 +61,7 @@
                     <button type="submit" class="text-gray-400 hover:text-red-600 text-sm">✕</button>
                 </form>
             </div>
+            {% endif %}
         </div>
 
         <div class="task-sortable space-y-2 mt-2 min-h-[10px]" data-list-id="{{ list.id }}">

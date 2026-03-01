@@ -59,6 +59,48 @@
                     </div>
                 </div>
 
+                <div class="mb-10">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xl">✅</span>
+                            <h3 class="text-sm font-bold text-gray-700 uppercase tracking-widest">Checklist</h3>
+                        </div>
+                        <span class="text-xs font-bold text-gray-500">{{ progress }}%</span>
+                    </div>
+
+                    <div class="w-full bg-gray-200 rounded-full h-2 mb-6">
+                        <div class="bg-green-500 h-2 rounded-full transition-all duration-500" style="width: {{ progress }}%"></div>
+                    </div>
+
+                    <div class="space-y-3">
+                        {% for item in task.checklist_items.all %}
+                        <div class="flex items-center group">
+                            <form method="POST" action="{% url 'toggle_checklist_item' item.id %}" class="flex items-center w-full">
+                                {% csrf_token %}
+                                <button type="submit" class="flex items-center w-full text-left">
+                                    <div class="h-5 w-5 border-2 rounded flex items-center justify-center transition
+                                        {% if item.is_done %}bg-green-500 border-green-500 text-white{% else %}border-gray-300 bg-white{% endif %}">
+                                        {% if item.is_done %}✓{% endif %}
+                                    </div>
+                                    <span class="ml-3 text-sm {% if item.is_done %}line-through text-gray-400{% else %}text-gray-700{% endif %}">
+                                        {{ item.title }}
+                                    </span>
+                                </button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <form method="POST" action="{% url 'add_checklist_item' task.id %}" class="mt-6 flex space-x-2">
+                        {% csrf_token %}
+                        <input type="text" name="title" placeholder="Add an item..." required
+                               class="flex-grow text-sm p-2 border-2 border-gray-100 rounded-lg outline-none focus:border-blue-400 transition">
+                        <button type="submit" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-bold transition">
+                            Add
+                        </button>
+                    </form>
+                </div>
+
                 <div class="mb-4 pt-6 border-t border-gray-100">
                     <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Assigned Member</h3>
                     {% if task.assigned_to %}
@@ -79,88 +121,80 @@
 
             <div class="w-full lg:w-72 flex-shrink-0 space-y-8">
 
-                <div>
-                    <h3 class="text-xs font-bold text-gray-500 uppercase mb-3 px-1">Assign Member</h3>
-                    <form method="POST" action="{% url 'assign_task' task.id %}">
-                        {% csrf_token %}
-                        <select name="user_id" onchange="this.form.submit()"
-                                class="w-full bg-gray-100 border-2 border-transparent hover:border-gray-300 p-2.5 rounded-lg text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer">
-                            <option value="">-- Unassigned --</option>
-                            <option value="{{ task.list.board.owner.id }}" {% if task.assigned_to == task.list.board.owner %}selected{% endif %}>
-                                {{ task.list.board.owner.username }} (Owner)
-                            </option>
-                            {% for member in task.list.board.members.all %}
-                                <option value="{{ member.id }}" {% if task.assigned_to == member %}selected{% endif %}>
-                                    {{ member.username }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </form>
-                </div>
+    <div>
+        <h3 class="text-xs font-bold text-gray-500 uppercase mb-3 px-1">Assign Member</h3>
+        <form method="POST" action="{% url 'assign_task' task.id %}">
+            {% csrf_token %}
+            <select name="user_id" onchange="this.form.submit()"
+                    class="w-full bg-gray-100 border-2 border-transparent hover:border-gray-300 p-2.5 rounded-lg text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer">
+                <option value="">-- Unassigned --</option>
+                <option value="{{ task.list.board.owner.id }}" {% if task.assigned_to == task.list.board.owner %}selected{% endif %}>
+                    {{ task.list.board.owner.username }} (Owner)
+                </option>
+                {% for member in task.list.board.members.all %}
+                    <option value="{{ member.id }}" {% if task.assigned_to == member %}selected{% endif %}>
+                        {{ member.username }}
+                    </option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
 
-                <div x-data="{ showLabelPicker: false }" class="relative">
-                    <h3 class="text-xs font-bold text-gray-500 uppercase mb-3 px-1">Add to card</h3>
+    <div x-data="{ showLabelPicker: false }" class="relative">
+        <h3 class="text-xs font-bold text-gray-500 uppercase mb-3 px-1">Add to card</h3>
 
-                    <button @click="showLabelPicker = !showLabelPicker"
-                            class="w-full text-left bg-gray-100 hover:bg-gray-200 p-2.5 rounded-lg text-sm font-semibold transition flex items-center shadow-sm">
-                        <span class="mr-3 text-lg">🏷️</span> Labels
-                    </button>
+        <button @click="showLabelPicker = !showLabelPicker"
+                class="w-full text-left bg-gray-100 hover:bg-gray-200 p-2.5 rounded-lg text-sm font-semibold transition flex items-center shadow-sm">
+            <span class="mr-3 text-lg">🏷️</span> Labels
+        </button>
 
-                    <div x-show="showLabelPicker" @click.away="showLabelPicker = false" x-cloak
-                         class="absolute top-12 left-0 w-full bg-white border border-gray-200 shadow-2xl rounded-xl z-50 p-5 animate-in fade-in zoom-in duration-200">
-                        <div class="flex justify-between items-center mb-4 border-b pb-2">
-                            <span class="text-xs font-bold text-gray-600 uppercase">Labels</span>
-                            <button @click="showLabelPicker = false" class="text-gray-400 hover:text-gray-700">✕</button>
+        <div x-show="showLabelPicker" @click.away="showLabelPicker = false" x-cloak
+             class="absolute top-12 left-0 w-full bg-white border border-gray-200 shadow-2xl rounded-xl z-50 p-5">
+            <form method="POST" action="{% url 'update_task_labels' task.id %}">
+                {% csrf_token %}
+                <div class="space-y-2 max-h-52 overflow-y-auto">
+                    {% for label in task.list.board.labels.all %}
+                    <label class="flex items-center group cursor-pointer">
+                        <input type="checkbox" name="labels" value="{{ label.id }}"
+                               class="mr-3 h-4 w-4 rounded border-gray-300 text-blue-600"
+                               {% if label in task.labels.all %}checked{% endif %}>
+                        <div class="flex-grow {{ label.color }} text-white text-[10px] font-black px-3 py-1.5 rounded uppercase tracking-tighter shadow-sm">
+                            {{ label.title }}
                         </div>
-
-                        <form method="POST" action="{% url 'update_task_labels' task.id %}">
-                            {% csrf_token %}
-                            <div class="space-y-2 max-h-52 overflow-y-auto pr-1">
-                                {% for label in task.list.board.labels.all %}
-                                <label class="flex items-center group cursor-pointer">
-                                    <input type="checkbox" name="labels" value="{{ label.id }}"
-                                           class="mr-3 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                           {% if label in task.labels.all %}checked{% endif %}>
-                                    <div class="flex-grow {{ label.color }} hover:brightness-90 text-white text-[10px] font-black px-3 py-1.5 rounded uppercase tracking-tighter transition shadow-sm">
-                                        {{ label.title }}
-                                    </div>
-                                </label>
-                                {% endfor %}
-                            </div>
-                            <button type="submit" class="w-full mt-5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2.5 rounded-lg shadow-md transition transform active:scale-95">
-                                Apply Changes
-                            </button>
-                        </form>
-                        <div class="mt-4 pt-3 border-t text-center">
-                            <a href="{% url 'manage_labels' task.list.board.slug %}" class="text-[10px] text-blue-600 font-bold hover:underline">
-                                + Create New Label
-                            </a>
-                        </div>
-                    </div>
+                    </label>
+                    {% endfor %}
                 </div>
+                <button type="submit" class="w-full mt-5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2.5 rounded-lg shadow-md transition">
+                    Apply Changes
+                </button>
+            </form>
+        </div>
+    </div>
 
-                <div class="space-y-2">
-                    <h3 class="text-xs font-bold text-gray-500 uppercase mb-3 px-1">Actions</h3>
+    <div class="space-y-2">
+        <h3 class="text-xs font-bold text-gray-500 uppercase mb-3 px-1">Actions</h3>
 
-                    <a href="{% url 'edit_task' task.id %}" class="w-full flex items-center bg-gray-100 hover:bg-gray-200 p-2.5 rounded-lg text-sm font-semibold transition shadow-sm">
-                        <span class="mr-3 text-lg">✏️</span> Edit Content
-                    </a>
+        <a href="{% url 'edit_task' task.id %}" class="w-full flex items-center bg-gray-100 hover:bg-gray-200 p-2.5 rounded-lg text-sm font-semibold transition shadow-sm">
+            <span class="mr-3 text-lg">✏️</span> Edit Content
+        </a>
 
-                    <form method="POST" action="{% url 'delete_task' task.id %}" onsubmit="return confirm('Archive this card? (Permanent deletion)');">
-                        {% csrf_token %}
-                        <button type="submit" class="w-full flex items-center bg-red-50 hover:bg-red-100 text-red-600 p-2.5 rounded-lg text-sm font-semibold transition shadow-sm border border-red-100">
-                            <span class="mr-3 text-lg">🗑️</span> Delete Card
-                        </button>
-                    </form>
-                </div>
+        {% if task.list.board.owner == request.user %}
+        <form method="POST" action="{% url 'delete_task' task.id %}" onsubmit="return confirm('Archive this card?');">
+            {% csrf_token %}
+            <button type="submit" class="w-full flex items-center bg-red-50 hover:bg-red-100 text-red-600 p-2.5 rounded-lg text-sm font-semibold transition shadow-sm border border-red-100">
+                <span class="mr-3 text-lg">🗑️</span> Delete Card
+            </button>
+        </form>
+        {% endif %}
+    </div>
 
-                <div class="pt-6 border-t border-gray-100">
-                    <a href="{% url 'board_detail' task.list.board.slug %}" class="w-full block text-center bg-gray-800 hover:bg-black text-white p-3 rounded-lg text-sm font-bold shadow-lg transition transform hover:-translate-y-0.5">
-                        Back to Board
-                    </a>
-                </div>
+    <div class="pt-6 border-t border-gray-100">
+        <a href="{% url 'board_detail' task.list.board.slug %}" class="w-full block text-center bg-gray-800 hover:bg-black text-white p-3 rounded-lg text-sm font-bold shadow-lg transition">
+            Back to Board
+        </a>
+    </div>
 
-            </div>
+</div>
         </div>
     </div>
 </div>

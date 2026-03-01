@@ -23,4 +23,6 @@ urlpatterns = [
     path('boards/update-order/', views.update_board_order, name='update_board_order'),
     path('board/<slug:slug>/add-member/', views.add_member, name='add_member'),
     path('task/<int:task_id>/assign/', views.assign_task, name='assign_task'),
+    path('task/<int:task_id>/checklist/add/', views.add_checklist_item, name='add_checklist_item'),
+    path('checklist/toggle/<int:item_id>/', views.toggle_checklist_item, name='toggle_checklist_item'),
 ]

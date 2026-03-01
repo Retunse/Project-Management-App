@@ -89,3 +89,16 @@ class ActivityLog(models.Model):
 
     def __str__(self):
         return f"{self.user.username}: {self.message}"
+
+class ChecklistItem(models.Model):
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='checklist_items')
+    title = models.CharField(max_length=255)
+    is_done = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    position = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['position', 'created_at']
+
+    def __str__(self):
+        return self.title

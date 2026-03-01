@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Board, List, Task, User, Label, ActivityLog
+from .models import Board, List, Task, User, Label, ActivityLog, ChecklistItem
 from .forms import TaskForm, BoardForm, ListForm, SignUpForm
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
@@ -11,10 +11,15 @@ def log_activity(user, board, message):
     """ Helper function to record user actions on the board """
     ActivityLog.objects.create(user=user, board=board, message=message)
 
+def get_board_with_access(slug, user):
+    return get_object_or_404(Board, Q(slug=slug) & (Q(owner=user) | Q(members=user)))
+
 @login_required
 def board_list(request):
     # filter boards to show only those belonging to the current user
-    boards = Board.objects.filter(Q(owner=request.user) | Q(members=request.user)).distinct()
+    boards = Board.objects.filter(
+        Q(owner=request.user) | Q(members=request.user)
+    ).prefetch_related('members', 'owner').distinct().order_by('position')
     return render(request, 'boards/board_list.html', {'boards': boards})
 
 @login_required
@@ -30,17 +35,15 @@ def board_detail(request, slug):
 @login_required
 def add_task(request, list_id):
     # get the specific list where the task will be added
-    target_list = get_object_or_404(List, id=list_id, board__owner=request.user)
+    target_list = get_object_or_404(List, id=list_id, board__in=Board.objects.filter(Q(owner=request.user) | Q(members=request.user)))
 
     if request.method == 'POST':
         title = request.POST.get('title')
-        # quick add logic (only title from inline form)
         if title:
             task = Task.objects.create(title=title, list=target_list)
             log_activity(request.user, target_list.board, f"added card '{task.title}' to {target_list.title}")
             return redirect('board_detail', slug=target_list.board.slug)
 
-        # full form logic (with description and priority)
         form = TaskForm(request.POST)
         if form.is_valid():
             task = form.save(commit=False)
@@ -80,7 +83,7 @@ def create_board(request):
 
 @login_required
 def add_list(request, board_id):
-    board = get_object_or_404(Board, id=board_id, owner=request.user)
+    board = get_object_or_404(Board, Q(id=board_id) & (Q(owner=request.user) | Q(members=request.user)))
 
     if request.method == 'POST':
         form = ListForm(request.POST)
@@ -154,7 +157,7 @@ def edit_list(request, list_id):
 
 @login_required
 def edit_task(request, task_id):
-    task = get_object_or_404(Task, id=task_id, list__board__owner=request.user)
+    task = get_object_or_404(Task, id=task_id, list__board__in=Board.objects.filter(Q(owner=request.user) | Q(members=request.user)))
     if request.method == 'POST':
         form = TaskForm(request.POST, instance=task)
         if form.is_valid():
@@ -167,12 +170,20 @@ def edit_task(request, task_id):
 
 @login_required
 def task_detail(request, task_id):
-    task = get_object_or_404(Task, id=task_id, list__board__owner=request.user)
-    return render(request, 'boards/task_detail.html', {'task': task})
+    task = get_object_or_404(Task, id=task_id, list__board__in=Board.objects.filter(Q(owner=request.user) | Q(members=request.user)))
+
+    items = task.checklist_items.all()
+    total = items.count()
+    completed = items.filter(is_done=True).count()
+    progress = int((completed / total) * 100) if total > 0 else 0
+    return render(request, 'boards/task_detail.html', {
+        'task': task,
+        'progress': progress
+    })
 
 @login_required
 def manage_labels(request, slug):
-    board = get_object_or_404(Board, slug=slug, owner=request.user)
+    board = get_object_or_404(Board, Q(slug=slug) & (Q(owner=request.user) | Q(members=request.user)))
     labels = board.labels.all()
 
     if request.method == 'POST':
@@ -188,7 +199,11 @@ def manage_labels(request, slug):
 @login_required
 @require_POST
 def update_task_labels(request, task_id):
-    task = get_object_or_404(Task, id=task_id, list__board__owner=request.user)
+    task = get_object_or_404(
+        Task,
+        id=task_id,
+        list__board__in=Board.objects.filter(Q(owner=request.user) | Q(members=request.user))
+    )
     label_ids = request.POST.getlist('labels')
     task.labels.set(label_ids)
     log_activity(request.user, task.list.board, f"updated labels for card '{task.title}'")
@@ -293,3 +308,20 @@ def assign_task(request, task_id):
     task.save()
     log_activity(request.user, task.list.board, message)
     return redirect('task_detail', task_id=task.id)
+
+@login_required
+@require_POST
+def add_checklist_item(request, task_id):
+    task = get_object_or_404(Task, id=task_id, list__board__in=Board.objects.filter(Q(owner=request.user) | Q(members=request.user)))
+    title = request.POST.get('title')
+    if title:
+        ChecklistItem.objects.create(task=task, title=title)
+    return redirect('task_detail', task_id=task.id)
+
+@login_required
+@require_POST
+def toggle_checklist_item(request, item_id):
+    item = get_object_or_404(ChecklistItem, id=item_id, task__list__board__in=Board.objects.filter(Q(owner=request.user) | Q(members=request.user)))
+    item.is_done = not item.is_done
+    item.save()
+    return redirect('task_detail', task_id=item.task.id)
