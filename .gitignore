@@ -8,6 +8,8 @@ ENV/
 
 db.sqlite3
 
+boards/migrations
+
 .env
 .secret
 
