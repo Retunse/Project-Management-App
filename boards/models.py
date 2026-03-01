@@ -7,6 +7,7 @@ class Board(models.Model):
     title = models.CharField(max_length=100)
     slug = models.SlugField(unique=True, blank=True)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='boards')
+    members = models.ManyToManyField(User, related_name='joined_boards', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     position = models.PositiveIntegerField(default=0)
 
@@ -66,6 +67,7 @@ class Task(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     labels = models.ManyToManyField(Label, blank=True, related_name='tasks')
     position = models.PositiveIntegerField(default=0)
+    assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks')
 
     class Meta:
         # newest tasks appear first

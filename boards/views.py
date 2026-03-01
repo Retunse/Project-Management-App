@@ -5,6 +5,7 @@ from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login
 from django.http import JsonResponse
+from django.db.models import Q
 
 def log_activity(user, board, message):
     """ Helper function to record user actions on the board """
@@ -13,13 +14,17 @@ def log_activity(user, board, message):
 @login_required
 def board_list(request):
     # filter boards to show only those belonging to the current user
-    boards = Board.objects.filter(owner=request.user)
+    boards = Board.objects.filter(Q(owner=request.user) | Q(members=request.user)).distinct()
     return render(request, 'boards/board_list.html', {'boards': boards})
 
 @login_required
 def board_detail(request, slug):
     # display board details and associated lists/tasks
-    board = get_object_or_404(Board, slug=slug, owner=request.user)
+    board = get_object_or_404(
+        Board,
+        Q(owner=request.user) | Q(members=request.user),
+        slug=slug
+    )
     return render(request, 'boards/board_detail.html', {'board': board})
 
 @login_required
@@ -250,3 +255,41 @@ def update_board_order(request):
             Board.objects.filter(id=b_id, owner=request.user).update(position=index)
         return JsonResponse({'status': 'success'})
     return JsonResponse({'status': 'error'}, status=400)
+
+
+@login_required
+def add_member(request, slug):
+    """ Allow board owner to add other users as members """
+    board = get_object_or_404(Board, slug=slug, owner=request.user)
+
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        try:
+            user_to_add = User.objects.get(username=username)
+            if user_to_add != board.owner:
+                board.members.add(user_to_add)
+                log_activity(request.user, board, f"added {username} to the board")
+        except User.DoesNotExist:
+                pass
+
+    return redirect('board_detail', slug=slug)
+
+@login_required
+@require_POST
+def assign_task(request, task_id):
+    # Fetch task if user has access to the board
+    task = get_object_or_404(Task, Q(id=task_id) & (
+                Q(list__board__owner=request.user) | Q(list__board__members=request.user)))
+    user_id = request.POST.get('user_id')
+
+    if user_id:
+        assigned_user = get_object_or_404(User, id=user_id)
+        task.assigned_to = assigned_user
+        message = f"assigned '{task.title}' to {assigned_user.username}"
+    else:
+        task.assigned_to = None
+        message = f"removed assignment from '{task.title}'"
+
+    task.save()
+    log_activity(request.user, task.list.board, message)
+    return redirect('task_detail', task_id=task.id)

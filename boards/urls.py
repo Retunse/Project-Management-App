@@ -5,7 +5,6 @@ urlpatterns = [
     path('', views.board_list, name='board_list'),
     path('board/create/', views.create_board, name='create_board'),
 
-    # dynamic route for viewing a specific board using its unique slug
     path('board/<slug:slug>/', views.board_detail, name='board_detail'),
     path('board/<int:board_id>/add-list/', views.add_list, name='add_list'),
     path('list/<int:list_id>/add-task/', views.add_task, name='add_task'),
@@ -22,4 +21,6 @@ urlpatterns = [
     path('tasks/update-order/', views.update_task_order, name='update_task_order'),
     path('lists/update-order/', views.update_list_order, name='update_list_order'),
     path('boards/update-order/', views.update_board_order, name='update_board_order'),
+    path('board/<slug:slug>/add-member/', views.add_member, name='add_member'),
+    path('task/<int:task_id>/assign/', views.assign_task, name='assign_task'),
 ]
