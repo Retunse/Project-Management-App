@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Archive | {{ board.title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto mt-10 px-4">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <nav class="text-sm text-gray-500 mb-2">
+                <a href="{% url 'board_detail' board.slug %}" class="hover:underline">← Back to {{ board.title }}</a>
+            </nav>
+            <h1 class="text-3xl font-black text-gray-900 flex items-center">
+                <span class="mr-3">📦</span> Archived Cards
+            </h1>
+        </div>
+        <span class="bg-gray-100 text-gray-600 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest">
+            {{ tasks.count }} items
+        </span>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 divide-y divide-gray-100 overflow-hidden">
+        {% for task in tasks %}
+        <div class="p-5 flex items-center justify-between hover:bg-gray-50 transition group">
+            <div class="flex items-center space-x-4">
+                <div class="h-10 w-10 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">
+                    🗄️
+                </div>
+                <div>
+                    <h3 class="font-bold text-gray-800">{{ task.title }}</h3>
+                    <p class="text-xs text-gray-400">Was in list: <span class="font-semibold">{{ task.list.title }}</span></p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3 opacity-0 group-hover:opacity-100 transition">
+                <form method="POST" action="{% url 'unarchive_task' task.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white px-4 py-2 rounded-lg text-xs font-bold transition">
+                        Restore to Board
+                    </button>
+                </form>
+
+                {% if board.owner == request.user %}
+                <form method="POST" action="{% url 'delete_task' task.id %}" onsubmit="return confirm('Delete permanently?');">
+                    {% csrf_token %}
+                    <button type="submit" class="text-red-400 hover:text-red-600 p-2 transition">
+                        🗑️
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="py-20 text-center">
+            <p class="text-gray-400 italic">The archive is empty.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

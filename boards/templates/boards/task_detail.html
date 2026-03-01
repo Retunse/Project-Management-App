@@ -218,17 +218,15 @@
                 <div class="space-y-2">
                     <h3 class="text-xs font-bold text-gray-500 uppercase mb-3 px-1">Actions</h3>
 
+                    {% if task.list.board.owner == request.user %}
                     <a href="{% url 'edit_task' task.id %}" class="w-full flex items-center bg-gray-100 hover:bg-gray-200 p-2.5 rounded-lg text-sm font-semibold transition shadow-sm">
                         <span class="mr-3 text-lg">✏️</span> Edit Content
                     </a>
 
-                    {% if task.list.board.owner == request.user %}
-                    <form method="POST" action="{% url 'delete_task' task.id %}" onsubmit="return confirm('Archive this card?');">
-                        {% csrf_token %}
-                        <button type="submit" class="w-full flex items-center bg-red-50 hover:bg-red-100 text-red-600 p-2.5 rounded-lg text-sm font-semibold transition shadow-sm border border-red-100">
-                            <span class="mr-3 text-lg">🗑️</span> Delete Card
-                        </button>
-                    </form>
+
+                    <a href="{% url 'archive_task' task.id %}" class="w-full flex items-center bg-gray-100 hover:bg-gray-200 p-2.5 rounded-lg text-sm font-semibold transition shadow-sm">
+                        <span class="mr-2">📦</span> Archive
+                    </a>
                     {% endif %}
                 </div>
 

@@ -45,6 +45,9 @@
         <a href="{% url 'manage_labels' board.slug %}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-bold flex items-center transition">
             <span class="mr-2">🏷️</span> Labels
         </a>
+        <a href="{% url 'board_archive' board.slug %}" class="flex items-center bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-bold transition">
+            <span class="mr-2">📦</span> Archive
+        </a>
     </div>
 </div>
 
@@ -66,58 +69,59 @@
 
         <div class="task-sortable space-y-2 mt-2 min-h-[10px]" data-list-id="{{ list.id }}">
             {% for task in list.tasks.all %}
-
-            <div class="bg-white p-3 rounded shadow-sm border-b border-gray-300 hover:bg-gray-50 group cursor-grab active:cursor-grabbing" data-task-id="{{ task.id }}">
-                <div class="flex justify-between items-start">
-                    <a href="{% url 'task_detail' task.id %}" class="flex-grow">
-                        <div class="flex flex-wrap gap-1 mb-1">
-                            {% for label in task.labels.all %}
-                                <div class="{{ label.color }} h-2 w-10 rounded-full" title="{{ label.title }}"></div>
-                            {% endfor %}
-                        </div>
-                        <p class="text-sm text-gray-800 font-medium">{{ task.title }}</p>
-                        {% if task.priority == 'HIGH' %}
-                            <span class="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-bold uppercase mt-1 inline-block">High</span>
+                {% if not task.is_archived %}
+                <div class="bg-white p-3 rounded shadow-sm border-b border-gray-300 hover:bg-gray-50 group cursor-grab active:cursor-grabbing" data-task-id="{{ task.id }}">
+                    <div class="flex justify-between items-start">
+                        <a href="{% url 'task_detail' task.id %}" class="flex-grow">
+                            <div class="flex flex-wrap gap-1 mb-1">
+                                {% for label in task.labels.all %}
+                                    <div class="{{ label.color }} h-2 w-10 rounded-full" title="{{ label.title }}"></div>
+                                {% endfor %}
+                            </div>
+                            <p class="text-sm text-gray-800 font-medium">{{ task.title }}</p>
+                            {% if task.priority == 'HIGH' %}
+                                <span class="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-bold uppercase mt-1 inline-block">High</span>
+                            {% endif %}
+                                                {% if task.due_date %}
+                            <div class="flex items-center mt-2 px-1 py-0.5 rounded text-[10px] font-bold inline-flex mr-2
+                                {% if task.due_status == 'overdue' %}bg-red-100 text-red-700
+                                {% elif task.due_status == 'soon' %}bg-yellow-100 text-yellow-700
+                                {% else %}bg-gray-100 text-gray-600{% endif %}">
+                                <span class="mr-1">🕒</span>
+                                {{ task.due_date|date:"d M" }}
+                            </div>
                         {% endif %}
-                                            {% if task.due_date %}
-                        <div class="flex items-center mt-2 px-1 py-0.5 rounded text-[10px] font-bold inline-flex mr-2
-                            {% if task.due_status == 'overdue' %}bg-red-100 text-red-700
-                            {% elif task.due_status == 'soon' %}bg-yellow-100 text-yellow-700
-                            {% else %}bg-gray-100 text-gray-600{% endif %}">
-                            <span class="mr-1">🕒</span>
-                            {{ task.due_date|date:"d M" }}
-                        </div>
-                    {% endif %}
-                    {% if task.checklist_total_count > 0 %}
-                        <div class="flex items-center mt-2 px-1 py-0.5 rounded text-[10px] font-bold inline-flex
-                            {% if task.checklist_completed_count == task.checklist_total_count %}
-                                bg-green-100 text-green-700
-                            {% else %}
-                                bg-gray-100 text-gray-600
-                            {% endif %}">
-                            <span class="mr-1">✓</span>
-                            {{ task.checklist_completed_count }}/{{ task.checklist_total_count }}
-                        </div>
-                    {% endif %}
-                    </a>
-
-                    <div class="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition ml-2">
-                        <a href="{% url 'edit_task' task.id %}" class="text-gray-400 hover:text-blue-600 p-1" title="Edit task">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                            </svg>
+                        {% if task.checklist_total_count > 0 %}
+                            <div class="flex items-center mt-2 px-1 py-0.5 rounded text-[10px] font-bold inline-flex
+                                {% if task.checklist_completed_count == task.checklist_total_count %}
+                                    bg-green-100 text-green-700
+                                {% else %}
+                                    bg-gray-100 text-gray-600
+                                {% endif %}">
+                                <span class="mr-1">✓</span>
+                                {{ task.checklist_completed_count }}/{{ task.checklist_total_count }}
+                            </div>
+                        {% endif %}
                         </a>
-                        <form method="POST" action="{% url 'delete_task' task.id %}" onsubmit="return confirm('Delete task?');">
-                            {% csrf_token %}
-                                <button type="submit" class="text-gray-400 hover:text-red-600 p-1" title="Delete task">
+
+                        <div class="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition ml-2">
+                            <a href="{% url 'edit_task' task.id %}" class="text-gray-400 hover:text-blue-600 p-1" title="Edit task">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                 </svg>
-                            </button>
-                        </form>
+                            </a>
+                            <form method="POST" action="{% url 'archive_task' task.id %}" onsubmit="return confirm('Archive this card? It will be hidden from the board.');">
+                                {% csrf_token %}
+                                <button type="submit" class="text-gray-400 hover:text-red-600 p-1" title="Delete task">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
-            </div>
+                {% endif %}
             {% endfor %}
         </div>
 

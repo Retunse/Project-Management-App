@@ -343,3 +343,36 @@ def add_comment(request, task_id):
         log_activity(request.user, task.list.board, f"commented on '{task.title}'")
 
     return redirect('task_detail', task_id=task.id)
+
+@login_required
+def archive_task(request, task_id):
+    task = get_object_or_404(
+        Task,
+        id=task_id,
+        list__board__in=Board.objects.filter(Q(owner=request.user) | Q(members=request.user))
+    )
+    task.is_archived = True
+    task.save()
+    log_activity(request.user, task.list.board, f"archived card '{task.title}'")
+    return redirect('board_detail', slug=task.list.board.slug)
+
+
+@login_required
+def board_archive(request, slug):
+    board = get_object_or_404(Board, Q(slug=slug) & (Q(owner=request.user) | Q(members=request.user)))
+    archived_tasks = Task.objects.filter(list__board=board, is_archived=True).order_by('-due_date')
+
+    return render(request, 'boards/archive.html', {
+        'board': board,
+        'tasks': archived_tasks
+    })
+
+
+@login_required
+def unarchive_task(request, task_id):
+    task = get_object_or_404(Task, id=task_id,
+                             list__board__in=Board.objects.filter(Q(owner=request.user) | Q(members=request.user)))
+    task.is_archived = False
+    task.save()
+    log_activity(request.user, task.list.board, f"restored card '{task.title}' from archive")
+    return redirect('task_detail', task_id=task.id)

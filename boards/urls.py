@@ -26,4 +26,7 @@ urlpatterns = [
     path('task/<int:task_id>/checklist/add/', views.add_checklist_item, name='add_checklist_item'),
     path('checklist/toggle/<int:item_id>/', views.toggle_checklist_item, name='toggle_checklist_item'),
     path('task/<int:task_id>/comment/', views.add_comment, name='add_comment'),
+    path('board/<slug:slug>/archive/', views.board_archive, name='board_archive'),
+    path('task/<int:task_id>/archive/', views.archive_task, name='archive_task'),
+    path('task/<int:task_id>/unarchive/', views.unarchive_task, name='unarchive_task'),
 ]
