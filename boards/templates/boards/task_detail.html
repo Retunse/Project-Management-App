@@ -117,110 +117,154 @@
                         <p class="text-sm text-gray-400 italic">No one is assigned to this card yet.</p>
                     {% endif %}
                 </div>
+
+                <div class="mt-12 pt-8 border-t border-gray-100">
+                    <div class="flex items-center space-x-2 mb-6">
+                        <span class="text-xl">💭</span>
+                        <h3 class="text-sm font-bold text-gray-700 uppercase tracking-widest">Activity & Comments</h3>
+                    </div>
+
+                    <div class="flex space-x-4 mb-8">
+                        <div class="h-10 w-10 rounded-full bg-blue-600 text-white flex-shrink-0 flex items-center justify-center font-bold shadow-sm">
+                            {{ request.user.username|slice:":2"|upper }}
+                        </div>
+                        <form method="POST" action="{% url 'add_comment' task.id %}" class="flex-grow">
+                            {% csrf_token %}
+                            <textarea name="text" rows="2" placeholder="Write a comment..." required
+                                      class="w-full p-3 text-sm border-2 border-gray-100 rounded-xl outline-none focus:border-blue-400 transition resize-none shadow-sm"></textarea>
+                            <div class="mt-2 flex justify-end">
+                                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-6 rounded-lg shadow-md transition transform active:scale-95">
+                                    Save Comment
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="space-y-6">
+                        {% for comment in task.comments.all %}
+                        <div class="flex space-x-4">
+                            <div class="h-8 w-8 rounded-full bg-gray-200 text-gray-600 flex-shrink-0 flex items-center justify-center text-[10px] font-bold">
+                                {{ comment.author.username|slice:":2"|upper }}
+                            </div>
+                            <div class="flex-grow">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-sm font-bold text-gray-800">{{ comment.author.username }}</span>
+                                    <span class="text-[10px] text-gray-400 font-medium">{{ comment.created_at|timesince }} ago</span>
+                                </div>
+                                <div class="mt-1 p-3 bg-gray-50 rounded-xl rounded-tl-none border border-gray-100 text-sm text-gray-700 leading-relaxed shadow-sm">
+                                    {{ comment.text|linebreaks }}
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                            <p class="text-center text-gray-400 text-sm italic py-4">No comments yet. Start the conversation!</p>
+                        {% endfor %}
+                    </div>
+                </div>
             </div>
 
             <div class="w-full lg:w-72 flex-shrink-0 space-y-8">
 
-    <div>
-        <h3 class="text-xs font-bold text-gray-500 uppercase mb-3 px-1">Assign Member</h3>
-        <form method="POST" action="{% url 'assign_task' task.id %}">
-            {% csrf_token %}
-            <select name="user_id" onchange="this.form.submit()"
-                    class="w-full bg-gray-100 border-2 border-transparent hover:border-gray-300 p-2.5 rounded-lg text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer">
-                <option value="">-- Unassigned --</option>
-                <option value="{{ task.list.board.owner.id }}" {% if task.assigned_to == task.list.board.owner %}selected{% endif %}>
-                    {{ task.list.board.owner.username }} (Owner)
-                </option>
-                {% for member in task.list.board.members.all %}
-                    <option value="{{ member.id }}" {% if task.assigned_to == member %}selected{% endif %}>
-                        {{ member.username }}
-                    </option>
-                {% endfor %}
-            </select>
-        </form>
-    </div>
-
-    <div x-data="{ showLabelPicker: false }" class="relative">
-        <h3 class="text-xs font-bold text-gray-500 uppercase mb-3 px-1">Add to card</h3>
-
-        <button @click="showLabelPicker = !showLabelPicker"
-                class="w-full text-left bg-gray-100 hover:bg-gray-200 p-2.5 rounded-lg text-sm font-semibold transition flex items-center shadow-sm">
-            <span class="mr-3 text-lg">🏷️</span> Labels
-        </button>
-
-        <div x-show="showLabelPicker" @click.away="showLabelPicker = false" x-cloak
-             class="absolute top-12 left-0 w-full bg-white border border-gray-200 shadow-2xl rounded-xl z-50 p-5">
-            <form method="POST" action="{% url 'update_task_labels' task.id %}">
-                {% csrf_token %}
-                <div class="space-y-2 max-h-52 overflow-y-auto">
-                    {% for label in task.list.board.labels.all %}
-                    <label class="flex items-center group cursor-pointer">
-                        <input type="checkbox" name="labels" value="{{ label.id }}"
-                               class="mr-3 h-4 w-4 rounded border-gray-300 text-blue-600"
-                               {% if label in task.labels.all %}checked{% endif %}>
-                        <div class="flex-grow {{ label.color }} text-white text-[10px] font-black px-3 py-1.5 rounded uppercase tracking-tighter shadow-sm">
-                            {{ label.title }}
-                        </div>
-                    </label>
-                    {% endfor %}
+                <div>
+                    <h3 class="text-xs font-bold text-gray-500 uppercase mb-3 px-1">Assign Member</h3>
+                    <form method="POST" action="{% url 'assign_task' task.id %}">
+                        {% csrf_token %}
+                        <select name="user_id" onchange="this.form.submit()"
+                                class="w-full bg-gray-100 border-2 border-transparent hover:border-gray-300 p-2.5 rounded-lg text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer">
+                            <option value="">-- Unassigned --</option>
+                            <option value="{{ task.list.board.owner.id }}" {% if task.assigned_to == task.list.board.owner %}selected{% endif %}>
+                                {{ task.list.board.owner.username }} (Owner)
+                            </option>
+                            {% for member in task.list.board.members.all %}
+                                <option value="{{ member.id }}" {% if task.assigned_to == member %}selected{% endif %}>
+                                    {{ member.username }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </form>
                 </div>
-                <button type="submit" class="w-full mt-5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2.5 rounded-lg shadow-md transition">
-                    Apply Changes
-                </button>
-            </form>
-        </div>
-    </div>
 
-    <div class="space-y-2">
-        <h3 class="text-xs font-bold text-gray-500 uppercase mb-3 px-1">Actions</h3>
+                <div x-data="{ showLabelPicker: false }" class="relative">
+                    <h3 class="text-xs font-bold text-gray-500 uppercase mb-3 px-1">Add to card</h3>
 
-        <a href="{% url 'edit_task' task.id %}" class="w-full flex items-center bg-gray-100 hover:bg-gray-200 p-2.5 rounded-lg text-sm font-semibold transition shadow-sm">
-            <span class="mr-3 text-lg">✏️</span> Edit Content
-        </a>
+                    <button @click="showLabelPicker = !showLabelPicker"
+                            class="w-full text-left bg-gray-100 hover:bg-gray-200 p-2.5 rounded-lg text-sm font-semibold transition flex items-center shadow-sm">
+                        <span class="mr-3 text-lg">🏷️</span> Labels
+                    </button>
 
-        {% if task.list.board.owner == request.user %}
-        <form method="POST" action="{% url 'delete_task' task.id %}" onsubmit="return confirm('Archive this card?');">
-            {% csrf_token %}
-            <button type="submit" class="w-full flex items-center bg-red-50 hover:bg-red-100 text-red-600 p-2.5 rounded-lg text-sm font-semibold transition shadow-sm border border-red-100">
-                <span class="mr-3 text-lg">🗑️</span> Delete Card
-            </button>
-        </form>
-        {% endif %}
-    </div>
+                    <div x-show="showLabelPicker" @click.away="showLabelPicker = false" x-cloak
+                         class="absolute top-12 left-0 w-full bg-white border border-gray-200 shadow-2xl rounded-xl z-50 p-5">
+                        <form method="POST" action="{% url 'update_task_labels' task.id %}">
+                            {% csrf_token %}
+                            <div class="space-y-2 max-h-52 overflow-y-auto">
+                                {% for label in task.list.board.labels.all %}
+                                <label class="flex items-center group cursor-pointer">
+                                    <input type="checkbox" name="labels" value="{{ label.id }}"
+                                           class="mr-3 h-4 w-4 rounded border-gray-300 text-blue-600"
+                                           {% if label in task.labels.all %}checked{% endif %}>
+                                    <div class="flex-grow {{ label.color }} text-white text-[10px] font-black px-3 py-1.5 rounded uppercase tracking-tighter shadow-sm">
+                                        {{ label.title }}
+                                    </div>
+                                </label>
+                                {% endfor %}
+                            </div>
+                            <button type="submit" class="w-full mt-5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2.5 rounded-lg shadow-md transition">
+                                Apply Changes
+                            </button>
+                        </form>
+                    </div>
+                </div>
 
-    <div class="pt-4 border-t border-gray-100">
-    <h3 class="text-xs font-bold text-gray-500 uppercase mb-3 px-1">Due Date</h3>
-    {% if task.due_date %}
-        <div class="p-3 rounded-lg border flex items-center justify-between
-            {% if task.due_status == 'overdue' %}bg-red-50 border-red-200 text-red-700
-            {% elif task.due_status == 'soon' %}bg-yellow-50 border-yellow-200 text-yellow-700
-            {% else %}bg-gray-50 border-gray-200 text-gray-700{% endif %}">
-            <div class="flex flex-col">
-                <span class="text-xs font-bold">{{ task.due_date|date:"d M, H:i" }}</span>
-                <span class="text-[10px] uppercase">
-                    {% if task.due_status == 'overdue' %}Overdue
-                    {% elif task.due_status == 'soon' %}Due Soon
-                    {% else %}On track{% endif %}
-                </span>
+                <div class="space-y-2">
+                    <h3 class="text-xs font-bold text-gray-500 uppercase mb-3 px-1">Actions</h3>
+
+                    <a href="{% url 'edit_task' task.id %}" class="w-full flex items-center bg-gray-100 hover:bg-gray-200 p-2.5 rounded-lg text-sm font-semibold transition shadow-sm">
+                        <span class="mr-3 text-lg">✏️</span> Edit Content
+                    </a>
+
+                    {% if task.list.board.owner == request.user %}
+                    <form method="POST" action="{% url 'delete_task' task.id %}" onsubmit="return confirm('Archive this card?');">
+                        {% csrf_token %}
+                        <button type="submit" class="w-full flex items-center bg-red-50 hover:bg-red-100 text-red-600 p-2.5 rounded-lg text-sm font-semibold transition shadow-sm border border-red-100">
+                            <span class="mr-3 text-lg">🗑️</span> Delete Card
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+
+                <div class="pt-4 border-t border-gray-100">
+                <h3 class="text-xs font-bold text-gray-500 uppercase mb-3 px-1">Due Date</h3>
+                {% if task.due_date %}
+                    <div class="p-3 rounded-lg border flex items-center justify-between
+                        {% if task.due_status == 'overdue' %}bg-red-50 border-red-200 text-red-700
+                        {% elif task.due_status == 'soon' %}bg-yellow-50 border-yellow-200 text-yellow-700
+                        {% else %}bg-gray-50 border-gray-200 text-gray-700{% endif %}">
+                        <div class="flex flex-col">
+                            <span class="text-xs font-bold">{{ task.due_date|date:"d M, H:i" }}</span>
+                            <span class="text-[10px] uppercase">
+                                {% if task.due_status == 'overdue' %}Overdue
+                                {% elif task.due_status == 'soon' %}Due Soon
+                                {% else %}On track{% endif %}
+                            </span>
+                        </div>
+                        <span class="text-lg">⏰</span>
+                    </div>
+                {% else %}
+                    <p class="text-xs text-gray-400 italic px-1">No due date set.</p>
+                {% endif %}
+
+                <a href="{% url 'edit_task' task.id %}" class="block mt-2 text-[10px] text-blue-600 font-bold hover:underline px-1">
+                    Change date
+                </a>
             </div>
-            <span class="text-lg">⏰</span>
-        </div>
-    {% else %}
-        <p class="text-xs text-gray-400 italic px-1">No due date set.</p>
-    {% endif %}
 
-    <a href="{% url 'edit_task' task.id %}" class="block mt-2 text-[10px] text-blue-600 font-bold hover:underline px-1">
-        Change date
-    </a>
-</div>
+                <div class="pt-6 border-t border-gray-100">
+                    <a href="{% url 'board_detail' task.list.board.slug %}" class="w-full block text-center bg-gray-800 hover:bg-black text-white p-3 rounded-lg text-sm font-bold shadow-lg transition">
+                        Back to Board
+                    </a>
+                </div>
 
-    <div class="pt-6 border-t border-gray-100">
-        <a href="{% url 'board_detail' task.list.board.slug %}" class="w-full block text-center bg-gray-800 hover:bg-black text-white p-3 rounded-lg text-sm font-bold shadow-lg transition">
-            Back to Board
-        </a>
-    </div>
-
-</div>
+            </div>
         </div>
     </div>
 </div>

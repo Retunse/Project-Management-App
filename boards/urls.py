@@ -25,4 +25,5 @@ urlpatterns = [
     path('task/<int:task_id>/assign/', views.assign_task, name='assign_task'),
     path('task/<int:task_id>/checklist/add/', views.add_checklist_item, name='add_checklist_item'),
     path('checklist/toggle/<int:item_id>/', views.toggle_checklist_item, name='toggle_checklist_item'),
+    path('task/<int:task_id>/comment/', views.add_comment, name='add_comment'),
 ]

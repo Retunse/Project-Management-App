@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Board, List, Task, User, Label, ActivityLog, ChecklistItem
+from .models import Board, List, Task, User, Label, ActivityLog, ChecklistItem, Comment
 from .forms import TaskForm, BoardForm, ListForm, SignUpForm
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
@@ -327,3 +327,19 @@ def toggle_checklist_item(request, item_id):
     item.is_done = not item.is_done
     item.save()
     return redirect('task_detail', task_id=item.task.id)
+
+
+@login_required
+@require_POST
+def add_comment(request, task_id):
+    task = get_object_or_404(
+        Task,
+        id=task_id,
+        list__board__in=Board.objects.filter(Q(owner=request.user) | Q(members=request.user))
+    )
+    text = request.POST.get('text')
+    if text:
+        Comment.objects.create(task=task, author=request.user, text=text)
+        log_activity(request.user, task.list.board, f"commented on '{task.title}'")
+
+    return redirect('task_detail', task_id=task.id)
