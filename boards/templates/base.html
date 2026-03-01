@@ -9,7 +9,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 </head>
-<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+<body class="bg-gray-100 font-sans leading-normal tracking-normal flex flex-col min-h-screen">
 
     <nav class="bg-blue-600 p-4 shadow-lg">
         <div class="container mx-auto flex justify-between items-center text-white">
@@ -29,10 +29,29 @@
         </div>
     </nav>
 
-    <main class="container mx-auto mt-10 px-4">
+    <main class="container mx-auto mt-10 px-4 flex-grow">
         {% block content %}
         {% endblock %}
+
     </main>
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+    <div class="max-w-[1800px] mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+
+        <div class="flex items-center space-x-2">
+            <span class="text-blue-600 font-black text-lg tracking-tighter">TrelloClone</span>
+            <span class="text-gray-400 text-xs font-medium">© 2026 Build with Django</span>
+        </div>
+
+        <div class="flex items-center space-x-6 text-xs font-bold text-gray-500 uppercase tracking-widest">
+            <div class="flex items-center space-x-1.5">
+                <span class="h-2 w-2 bg-green-500 rounded-full animate-pulse"></span>
+            </div>
+            <a href="https://github.com/Retunse/Project-Management-App" class="hover:text-blue-600 transition">GitHub</a>
+        </div>
+
+    </div>
+</footer>
+
 
 </body>
 </html>
