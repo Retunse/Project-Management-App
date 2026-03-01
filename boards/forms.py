@@ -1,7 +1,6 @@
 from django import forms
-from .models import Task, Board, List
+from .models import Task, Board, List, User
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.models import User
 
 class TaskForm(forms.ModelForm):
     class Meta:
@@ -55,7 +54,33 @@ class SignUpForm(UserCreationForm):
 class TaskForm(forms.ModelForm):
     class Meta:
         model = Task
-        fields = ['title', 'description', 'priority', 'due_date']
+        fields = ['title', 'description', 'priority', 'due_date', 'assigned_to']
         widgets = {
-            'due_date': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-input'}),
+            'title': forms.TextInput(attrs={
+                'class': 'w-full p-3 rounded-lg border-2 border-gray-100 focus:border-blue-500 outline-none transition',
+                'placeholder': 'Task Title'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'w-full p-3 rounded-lg border-2 border-gray-100 focus:border-blue-500 outline-none transition',
+                'rows': 4,
+                'placeholder': 'Add a more detailed description...'
+            }),
+            'priority': forms.Select(attrs={
+                'class': 'w-full p-3 rounded-lg border-2 border-gray-100 focus:border-blue-500 outline-none transition cursor-pointer'
+            }),
+            'due_date': forms.DateTimeInput(attrs={
+                'type': 'datetime-local',
+                'class': 'w-full p-3 rounded-lg border-2 border-gray-100 focus:border-blue-500 outline-none transition'
+            }),
+            'assigned_to': forms.Select(attrs={
+                'class': 'w-full p-3 rounded-lg border-2 border-gray-100 focus:border-blue-500 outline-none transition cursor-pointer'
+            }),
         }
+
+    def __init__(self, *args, **kwargs):
+        board = kwargs.pop('board', None)
+        super().__init__(*args, **kwargs)
+        if board:
+            self.fields['assigned_to'].queryset = User.objects.filter(
+                id__in=[board.owner.id] + [m.id for m in board.members.all()]
+            )

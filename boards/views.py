@@ -158,12 +158,14 @@ def edit_list(request, list_id):
 @login_required
 def edit_task(request, task_id):
     task = get_object_or_404(Task, id=task_id, list__board__in=Board.objects.filter(Q(owner=request.user) | Q(members=request.user)))
+    board = task.list.board
+
     if request.method == 'POST':
-        form = TaskForm(request.POST, instance=task)
+        form = TaskForm(request.POST, instance=task, board=board)
         if form.is_valid():
             form.save()
-            log_activity(request.user, task.list.board, f"edited card '{task.title}'")
-            return redirect('board_detail', slug=task.list.board.slug)
+            log_activity(request.user, board, f"edited details of card '{task.title}'")
+            return redirect('task_detail', task_id=task.id)
     else:
         form = TaskForm(instance=task)
     return render(request, 'boards/edit_task.html', {'form': form, 'task': task})

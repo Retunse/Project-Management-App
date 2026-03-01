@@ -79,24 +79,7 @@
                         {% if task.priority == 'HIGH' %}
                             <span class="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-bold uppercase mt-1 inline-block">High</span>
                         {% endif %}
-                    </a>
-
-                    <div class="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition ml-2">
-                        <a href="{% url 'edit_task' task.id %}" class="text-gray-400 hover:text-blue-600 p-1" title="Edit task">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                            </svg>
-                        </a>
-                        <form method="POST" action="{% url 'delete_task' task.id %}" onsubmit="return confirm('Delete task?');">
-                            {% csrf_token %}
-                                <button type="submit" class="text-gray-400 hover:text-red-600 p-1" title="Delete task">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </form>
-                    </div>
-                    {% if task.due_date %}
+                                            {% if task.due_date %}
                         <div class="flex items-center mt-2 px-1 py-0.5 rounded text-[10px] font-bold inline-flex mr-2
                             {% if task.due_status == 'overdue' %}bg-red-100 text-red-700
                             {% elif task.due_status == 'soon' %}bg-yellow-100 text-yellow-700
@@ -116,6 +99,23 @@
                             {{ task.checklist_completed_count }}/{{ task.checklist_total_count }}
                         </div>
                     {% endif %}
+                    </a>
+
+                    <div class="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition ml-2">
+                        <a href="{% url 'edit_task' task.id %}" class="text-gray-400 hover:text-blue-600 p-1" title="Edit task">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                        </a>
+                        <form method="POST" action="{% url 'delete_task' task.id %}" onsubmit="return confirm('Delete task?');">
+                            {% csrf_token %}
+                                <button type="submit" class="text-gray-400 hover:text-red-600 p-1" title="Delete task">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
             {% endfor %}
