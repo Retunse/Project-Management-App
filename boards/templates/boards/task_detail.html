@@ -188,6 +188,32 @@
         {% endif %}
     </div>
 
+    <div class="pt-4 border-t border-gray-100">
+    <h3 class="text-xs font-bold text-gray-500 uppercase mb-3 px-1">Due Date</h3>
+    {% if task.due_date %}
+        <div class="p-3 rounded-lg border flex items-center justify-between
+            {% if task.due_status == 'overdue' %}bg-red-50 border-red-200 text-red-700
+            {% elif task.due_status == 'soon' %}bg-yellow-50 border-yellow-200 text-yellow-700
+            {% else %}bg-gray-50 border-gray-200 text-gray-700{% endif %}">
+            <div class="flex flex-col">
+                <span class="text-xs font-bold">{{ task.due_date|date:"d M, H:i" }}</span>
+                <span class="text-[10px] uppercase">
+                    {% if task.due_status == 'overdue' %}Overdue
+                    {% elif task.due_status == 'soon' %}Due Soon
+                    {% else %}On track{% endif %}
+                </span>
+            </div>
+            <span class="text-lg">⏰</span>
+        </div>
+    {% else %}
+        <p class="text-xs text-gray-400 italic px-1">No due date set.</p>
+    {% endif %}
+
+    <a href="{% url 'edit_task' task.id %}" class="block mt-2 text-[10px] text-blue-600 font-bold hover:underline px-1">
+        Change date
+    </a>
+</div>
+
     <div class="pt-6 border-t border-gray-100">
         <a href="{% url 'board_detail' task.list.board.slug %}" class="w-full block text-center bg-gray-800 hover:bg-black text-white p-3 rounded-lg text-sm font-bold shadow-lg transition">
             Back to Board

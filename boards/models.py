@@ -1,7 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.text import slugify
-
+from django.utils import timezone
+from datetime import timedelta
 
 class Board(models.Model):
     title = models.CharField(max_length=100)
@@ -68,6 +69,26 @@ class Task(models.Model):
     labels = models.ManyToManyField(Label, blank=True, related_name='tasks')
     position = models.PositiveIntegerField(default=0)
     assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks')
+    due_date = models.DateTimeField(null=True, blank=True)
+
+    @property
+    def checklist_total_count(self):
+        return self.checklist_items.count()
+
+    @property
+    def checklist_completed_count(self):
+        return self.checklist_items.filter(is_done=True).count()
+
+    @property
+    def due_status(self):
+        if not self.due_date:
+            return None
+        now = timezone.now()
+        if self.due_date < now:
+            return "overdue"
+        if self.due_date < now + timedelta(days=1):
+            return "soon"
+        return "upcoming"
 
     class Meta:
         # newest tasks appear first

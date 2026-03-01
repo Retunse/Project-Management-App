@@ -66,6 +66,7 @@
 
         <div class="task-sortable space-y-2 mt-2 min-h-[10px]" data-list-id="{{ list.id }}">
             {% for task in list.tasks.all %}
+
             <div class="bg-white p-3 rounded shadow-sm border-b border-gray-300 hover:bg-gray-50 group cursor-grab active:cursor-grabbing" data-task-id="{{ task.id }}">
                 <div class="flex justify-between items-start">
                     <a href="{% url 'task_detail' task.id %}" class="flex-grow">
@@ -95,6 +96,26 @@
                             </button>
                         </form>
                     </div>
+                    {% if task.due_date %}
+                        <div class="flex items-center mt-2 px-1 py-0.5 rounded text-[10px] font-bold inline-flex mr-2
+                            {% if task.due_status == 'overdue' %}bg-red-100 text-red-700
+                            {% elif task.due_status == 'soon' %}bg-yellow-100 text-yellow-700
+                            {% else %}bg-gray-100 text-gray-600{% endif %}">
+                            <span class="mr-1">🕒</span>
+                            {{ task.due_date|date:"d M" }}
+                        </div>
+                    {% endif %}
+                    {% if task.checklist_total_count > 0 %}
+                        <div class="flex items-center mt-2 px-1 py-0.5 rounded text-[10px] font-bold inline-flex
+                            {% if task.checklist_completed_count == task.checklist_total_count %}
+                                bg-green-100 text-green-700
+                            {% else %}
+                                bg-gray-100 text-gray-600
+                            {% endif %}">
+                            <span class="mr-1">✓</span>
+                            {{ task.checklist_completed_count }}/{{ task.checklist_total_count }}
+                        </div>
+                    {% endif %}
                 </div>
             </div>
             {% endfor %}
