@@ -43,8 +43,8 @@
                     {% endfor %}
                 </select>
                 <a href="{% url 'manage_labels' board.slug %}" class="bg-gray-800 hover:bg-black text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm">
-    Manage Labels
-</a>
+                    Manage Labels
+                </a>
 
                 <a href="{% url 'board_archive' board.slug %}" class="flex items-center space-x-2 text-gray-500 hover:text-gray-800 font-bold text-xs uppercase transition">
                     <span>📦 Archive</span>
@@ -68,10 +68,35 @@
             {% for list in board.lists.all %}
             <div class="list-item w-80 flex-shrink-0 bg-gray-200/60 rounded-2xl flex flex-col max-h-full border border-gray-200 cursor-default" data-list-id="{{ list.id }}">
 
-                <div class="list-handle p-4 flex items-center justify-between cursor-grab active:cursor-grabbing">
-                    <h3 class="font-black text-gray-700 uppercase text-xs tracking-wider">{{ list.title }}</h3>
-                    <span class="bg-gray-300 text-gray-600 px-2 py-0.5 rounded text-[10px] font-bold">{{ list.tasks.count }}</span>
-                </div>
+                <div x-data="{ listMenuOpen: false }" class="list-handle p-4 flex items-center justify-between cursor-grab active:cursor-grabbing relative">
+    <div class="flex items-center space-x-2 overflow-hidden">
+        <h3 class="font-black text-gray-700 uppercase text-xs tracking-wider truncate">{{ list.title }}</h3>
+        <span class="bg-gray-300 text-gray-600 px-2 py-0.5 rounded text-[10px] font-bold">{{ list.tasks.count }}</span>
+    </div>
+
+    <div class="flex items-center space-x-1">
+        <button @click.stop="listMenuOpen = !listMenuOpen" class="text-gray-400 hover:text-gray-600 p-1 rounded-md transition">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path></svg>
+        </button>
+
+        <div x-show="listMenuOpen" @click.away="listMenuOpen = false" x-cloak
+             class="absolute right-2 top-10 w-40 bg-white shadow-xl rounded-xl border border-gray-100 z-50 py-2">
+
+            <a href="{% url 'edit_list' list.id %}" class="flex items-center px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition">
+                <span class="mr-2">✏️</span> Rename List
+            </a>
+
+            <div class="border-t border-gray-100 my-1"></div>
+
+            <form method="POST" action="{% url 'delete_list' list.id %}" onsubmit="return confirm('Delete this list and all its tasks?');">
+                {% csrf_token %}
+                <button type="submit" class="w-full text-left px-4 py-2 text-xs font-bold text-red-500 hover:bg-red-50 transition">
+                    <span class="mr-2">🗑️</span> Delete List
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
 
                 <div class="task-list-container flex-grow overflow-y-auto px-3 pb-3 space-y-3 min-h-[100px]" id="tasks-{{ list.id }}" data-list-id="{{ list.id }}">
                     {% for task in list.tasks.all %}
@@ -142,6 +167,14 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
+function updateListCounters() {
+    document.querySelectorAll('.list-item').forEach(list => {
+        const count = list.querySelectorAll('.task-item').length;
+        const badge = list.querySelector('.list-handle span');
+        if (badge) badge.innerText = count;
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     window.isDragging = false;
 
@@ -154,6 +187,8 @@ document.addEventListener('DOMContentLoaded', function() {
             onStart: () => window.isDragging = true,
             onEnd: function(evt) {
                 setTimeout(() => window.isDragging = false, 100);
+
+                updateListCounters();
 
                 const taskId = evt.item.dataset.taskId;
                 const newListId = evt.to.dataset.listId;
